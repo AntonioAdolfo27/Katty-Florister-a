@@ -16,6 +16,8 @@
 
 <body>
 
+  <div class="nav-actions"></div>
+
     <!-- ================= HEADER PREMIUM ================= -->
 <header class="header">
 
@@ -80,6 +82,14 @@
       <div class="search-box">
         <input type="text" placeholder="Buscar flores premium...">
       </div>
+
+      <!-- BOTÓN CARRITO PC -->
+<button class="cart-btn" id="openCart">
+  <i class="fas fa-shopping-bag"></i>
+  <span class="cart-count" id="floatingCount">0</span>
+</button>
+
+
 
       <!-- BOTÓN HAMBURGUESA (DENTRO DEL HEADER) -->
       <button class="menu-toggle" id="menuToggle">
@@ -201,6 +211,12 @@
 
   </nav>
 
+</div>
+
+<!-- ================= MODAL IMAGEN PRODUCTO ================= -->
+<div id="imageModal" class="image-modal">
+  <span class="close-image">&times;</span>
+  <img id="modalImage" src="" alt="Imagen ampliada">
 </div>
 
 <!-- ======================== CATALOGO ======================== -->
@@ -503,7 +519,74 @@
   </div>
 </section>
 
+<!-- ================= CARRITO FLOTANTE MOVIL ================= -->
+<button class="floating-cart" id="openCartMobile">
+  <i class="fas fa-shopping-bag"></i>
+  <span class="floating-count" id="floatingCount">0</span>
+</button>
+
+<!-- ================= OVERLAY CARRITO ================= -->
+<div class="cart-overlay" id="cartOverlay"></div>
+
+<!-- ================= SIDEBAR CARRITO ================= -->
+<div class="cart-sidebar" id="cartSidebar">
+
+  <div class="cart-header">
+    <h2>Tu Carrito</h2>
+    <button id="closeCart" class="close-cart">✕</button>
+  </div>
+
+  <div class="cart-items" id="cartItems"></div>
+
+  <div class="cart-summary">
+    <div class="summary-row">
+      <span>Total:</span>
+      <strong>RD$ <span id="cartTotal">0</span></strong>
+    </div>
+
+    <button class="checkout-btn" id="showCheckout">
+      Finalizar Compra
+    </button>
+  </div>
+
+  <!-- CHECKOUT INTERNO -->
+  <div class="checkout-inside" id="checkoutInside">
+
+    <h3>Información de Entrega</h3>
+
+    <form id="checkoutForm">
+
+  <div class="input-group">
+  <label>Nombre Completo</label>
+  <input type="text" id="customerName" required>
+</div>
+
+<div class="input-group">
+  <label>Teléfono</label>
+  <input type="tel" id="customerPhone" required>
+</div>
+
+<div class="input-group full-width">
+  <label>Correo Electrónico</label>
+  <input type="email" id="customerEmail" required>
+</div>
+
+<div class="input-group full-width">
+  <label>Dirección de Entrega</label>
+  <textarea id="customerAddress" required></textarea>
+</div>
+
+  <button type="submit" class="confirm-order">
+    Confirmar Pedido
+  </button>
+
+</form>
+  </div>
+
+</div>
+
 <script src="funciones.js"></script>
 
 </body>
+
 </html>
