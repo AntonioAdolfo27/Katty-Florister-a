@@ -85,11 +85,32 @@
         <input type="text" placeholder="Buscar flores premium...">
       </div>
 
+      <div class="favorites-icon" id="openFavorites">
+  <i class="fa-solid fa-heart"></i>
+  <span class="favorites-count" id="favoritesCount">0</span>
+</div>
+
       <!-- BOTÓN CARRITO PC -->
 <button class="cart-btn" id="openCart">
   <i class="fas fa-shopping-bag"></i>
   <span class="cart-count" id="floatingCount">0</span>
 </button>
+
+
+<div class="favorites-sidebar" id="favoritesSidebar">
+  <div class="favorites-header">
+    <h3>Mis Favoritos</h3>
+    <button id="closeFavorites">✕</button>
+  </div>
+
+  <div class="favorites-items" id="favoritesItems"></div>
+
+  <div class="favorites-footer">
+    <button id="addAllToCart">Agregar todos al carrito</button>
+  </div>
+</div>
+
+<div class="favorites-overlay" id="favoritesOverlay"></div>
 
 
 
@@ -244,6 +265,11 @@
              data-price="150">
 
           <div class="product-image">
+
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
             <img src="imagen1 de rosa.jpeg" alt="Rosa Roja Premium">
           </div>
 
@@ -266,6 +292,10 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
             <img src="imagen2 de rosa.jpeg" alt="Rosa Rosada Premium">
           </div>
 
@@ -288,6 +318,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
           </div>
 
@@ -310,6 +343,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen4 de rosa .jpeg" alt="Rosa Amarrilla Premium">
           </div>
 
@@ -332,6 +368,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen5 de rosa .jpeg" alt="Rosa Azules Premium">
           </div>
 
@@ -365,6 +404,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen1 de rosa.jpeg" alt="Rosa Roja Premium">
           </div>
 
@@ -387,6 +429,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen2 de rosa.jpeg" alt="Rosa Rosada Premium">
           </div>
 
@@ -409,6 +454,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
           </div>
 
@@ -431,6 +479,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen4 de rosa .jpeg" alt="Rosa Amarrilla Premium">
           </div>
 
@@ -453,6 +504,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen5 de rosa .jpeg" alt="Rosa Azules Premium">
           </div>
 
@@ -486,6 +540,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen1 de rosa.jpeg" alt="Rosa Roja Premium">
           </div>
 
@@ -508,6 +565,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen2 de rosa.jpeg" alt="Rosa Rosada Premium">
           </div>
 
@@ -530,6 +590,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
           </div>
 
@@ -552,6 +615,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen4 de rosa .jpeg" alt="Rosa Amarrilla Premium">
           </div>
 
@@ -574,6 +640,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen5 de rosa .jpeg" alt="Rosa Azules Premium">
           </div>
 
@@ -607,6 +676,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen1 de rosa.jpeg" alt="Rosa Roja Premium">
           </div>
 
@@ -629,6 +701,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen2 de rosa.jpeg" alt="Rosa Rosada Premium">
           </div>
 
@@ -651,6 +726,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
           </div>
 
@@ -673,6 +751,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen4 de rosa .jpeg" alt="Rosa Amarrilla Premium">
           </div>
 
@@ -695,6 +776,9 @@
              data-price="150">
 
           <div class="product-image">
+            <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
             <img src="imagen5 de rosa .jpeg" alt="Rosa Azules Premium">
           </div>
 
@@ -851,3 +935,4 @@
 </body>
 
 </html>
+
