@@ -1541,3 +1541,136 @@ iframe{
   }
 
 }
+
+
+
+#toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #25D366;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.4s;
+  z-index: 9999;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+.favorite-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgb(255, 255, 255);
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(255, 0, 0, 0);
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-btn i {
+  font-size: 20px;
+  color: #ff0000;
+  transition: 0.3s;
+}
+
+.favorite-btn.active i {
+  color: #e91e63;
+  transform: scale(1.2);
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+
+
+.favorites-icon {
+  position: relative;
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.favorites-icon i {
+  font-size: 22px;
+  color: #e91e63;
+}
+
+.favorites-count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: black;
+  color: white;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 50%;
+}
+
+
+.favorites-sidebar {
+  position: fixed;
+  right: -400px;
+  top: 0;
+  width: 350px;
+  height: 100%;
+  background: white;
+  box-shadow: -5px 0 20px rgba(0,0,0,.2);
+  transition: .4s;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+}
+
+.favorites-sidebar.active {
+  right: 0;
+}
+
+.favorites-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: .3s;
+}
+
+.favorites-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.favorites-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.favorites-footer {
+  padding: 15px;
+  border-top: 1px solid #eee;
+}
+
+#addAllToCart {
+  width: 100%;
+  padding: 12px;
+  background: #e91e63;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+
