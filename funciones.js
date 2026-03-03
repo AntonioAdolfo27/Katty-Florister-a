@@ -115,6 +115,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkoutInside = document.getElementById("checkoutInside");
   const checkoutForm = document.getElementById("checkoutForm");
 
+  // =====================================================
+// CARGAR CARRITO DESDE LOCALSTORAGE
+// =====================================================
+
+const savedCart = localStorage.getItem("cart");
+
+if (savedCart) {
+  cart = JSON.parse(savedCart);
+}
+
+// =====================================================
+// GUARDAR CARRITO EN LOCALSTORAGE
+// =====================================================
+
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+
   function openCart() {
     cartSidebar?.classList.add("active");
     cartOverlay?.classList.add("active");
@@ -211,6 +230,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     addQuantityEvents();
+
+    saveCart();
   }
 
   function addQuantityEvents() {
@@ -270,38 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeCart();
   });
 
-    // =====================================================
-// CATÁLOGO DESLIZABLE SOLO EN MÓVIL
-// =====================================================
-
-function enableMobileScroll() {
-
-  if (window.innerWidth > 768) return;
-
-  const productGrids = document.querySelectorAll(".product-grid");
-
-  productGrids.forEach(grid => {
-
-    let startX;
-    let scrollLeft;
-
-    grid.addEventListener("touchstart", (e) => {
-      startX = e.touches[0].pageX - grid.offsetLeft;
-      scrollLeft = grid.scrollLeft;
-    });
-
-    grid.addEventListener("touchmove", (e) => {
-      const x = e.touches[0].pageX - grid.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      grid.scrollLeft = scrollLeft - walk;
-    });
-
-  });
-
-}
-
-enableMobileScroll();
-
+   
 // =====================================================
 // MODAL IMAGEN PRODUCTO (CLICK PARA AGRANDAR)
 // =====================================================
@@ -344,5 +334,7 @@ function closeModal() {
   imageModal.classList.remove("active");
   document.body.style.overflow = "auto";
 }
+
+renderCart();
 
 });
