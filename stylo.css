@@ -1407,3 +1407,44 @@ iframe{
 .close-image:hover {
   transform: scale(1.2);
 }
+
+/* ===============================
+   CATÁLOGO PROFESIONAL SOLO MÓVIL
+================================= */
+
+@media (max-width: 768px) {
+
+  .product-grid {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+  }
+
+  .product-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .product-card {
+    min-width: 85%;
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+  }
+
+}
+
+
+@media (max-width: 768px) {
+
+  .product-card {
+    transition: transform 0.3s ease;
+  }
+
+  .product-card:active {
+    transform: scale(0.97);
+  }
+
+}
