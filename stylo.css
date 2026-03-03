@@ -1448,3 +1448,96 @@ iframe{
   }
 
 }
+
+
+
+/* ===============================
+   CARRITO SCROLL PROFESIONAL
+================================= */
+
+.cart-items {
+  max-height: 60vh; /* ocupa máximo 60% de la pantalla */
+  overflow-y: auto;
+  padding-right: 5px;
+   
+}
+
+/* Scroll elegante */
+.cart-items::-webkit-scrollbar {
+  width: 6px;
+   
+}
+
+.cart-items::-webkit-scrollbar-thumb {
+  background: #25D366;
+  border-radius: 10px;
+   
+}
+
+.cart-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cart {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+   
+}
+
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+}
+
+
+
+
+.btn-ir {
+  display: block;              /* importante */
+  width: fit-content;          /* ajusta al tamaño del texto */
+  margin: 20px auto;           /* lo centra horizontalmente */
+  padding: 12px 20px;
+  background: linear-gradient(135deg,#ff4b90,#ff7eb3);
+  text-decoration: none;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: 0.3s;
+  text-align: center;
+}
+
+.btn-ir:hover {
+  background: #25D366;
+  color: white;
+}
+
+.btn-ir {
+  display: block;
+  width: fit-content;
+  margin: 20px auto;
+  padding: 12px 20px;
+  background: linear-gradient(135deg,#ff4b90,#ff7eb3);
+  text-decoration: none;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  transition: 0.3s;
+}
+
+.btn-ir:hover {
+  background: #25D366;
+  color: white;
+}
+
+@media (max-width: 768px) {
+
+  .btn-ir {
+    width: 90%;          /* ocupa casi todo el ancho */
+    max-width: 400px;    /* no se hace exageradamente grande */
+    font-size: 16px;
+    padding: 14px;
+  }
+
+}
