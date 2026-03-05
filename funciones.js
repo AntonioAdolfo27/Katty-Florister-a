@@ -496,4 +496,3 @@ addAllToCart?.addEventListener("click", () => {
 }); 
 
     
-
