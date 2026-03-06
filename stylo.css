@@ -1866,3 +1866,258 @@ height:24px;
 }
 
 }
+
+/* =========================================
+SECCION PROMOCIONES FLORISTERIA PREMIUM
+========================================= */
+
+.promo-section{
+
+padding:80px 6%;
+background:linear-gradient(180deg,#fff,#fff7fa);
+
+}
+
+/* TITULO */
+
+.promo-header{
+text-align:center;
+margin-bottom:50px;
+}
+
+.promo-header h2{
+font-size:34px;
+color:#c94f7c;
+margin-bottom:10px;
+}
+
+.promo-header p{
+color:#666;
+font-size:16px;
+}
+
+
+/* GRID */
+
+.promo-grid{
+
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:30px;
+
+}
+
+
+/* TARJETA */
+
+.promo-card{
+
+background:white;
+border-radius:18px;
+
+overflow:hidden;
+
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+
+transition:all .35s ease;
+
+position:relative;
+
+display:flex;
+flex-direction:column;
+
+}
+
+.promo-card:hover{
+
+transform:translateY(-6px);
+
+box-shadow:0 18px 40px rgb(0, 0, 0);
+
+}
+
+
+/* BADGE */
+
+.promo-badge{
+
+position:absolute;
+
+top:14px;
+left:14px;
+
+background:#e85b87;
+color:white;
+
+padding:6px 12px;
+
+font-size:13px;
+font-weight:600;
+
+border-radius:50px;
+
+}
+
+
+/* IMAGEN */
+
+.promo-image{
+
+width:100%;
+height:240px;
+
+overflow:hidden;
+
+background:#fdf2f5;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+}
+
+/* IMAGEN AJUSTADA AL CUADRO */
+
+.promo-image img{
+
+width:100%;
+height:100%;
+
+object-fit:cover;
+
+transition:transform .5s;
+
+}
+
+/* EFECTO HOVER */
+
+
+/* INFORMACION */
+
+.promo-info{
+
+padding:20px;
+
+text-align:center;
+
+display:flex;
+flex-direction:column;
+gap:10px;
+
+}
+
+.promo-info h3{
+
+font-size:18px;
+color:#272727;
+
+}
+
+
+/* PRECIOS */
+
+.promo-price{
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+gap:10px;
+
+}
+
+.old-price{
+
+text-decoration:line-through;
+
+color:#999;
+
+font-size:14px;
+
+}
+
+.new-price{
+
+font-size:20px;
+
+font-weight:bold;
+
+color:#c94f7c;
+
+}
+
+
+/* BOTON */
+
+.promo-btn{
+
+margin-top:10px;
+
+padding:12px 20px;
+
+border:none;
+
+border-radius:30px;
+
+background:linear-gradient(135deg,#d45a84,#f07aa2);
+
+color:white;
+
+font-weight:600;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+.promo-btn:hover{
+
+transform:scale(1.05);
+
+box-shadow:0 10px 20px rgba(212, 90, 133, 0.467);
+
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width:768px){
+
+.promo-image{
+
+height:200px;
+
+}
+
+.promo-header h2{
+
+font-size:26px;
+
+}
+
+}
+
+/* ============================
+TEMPORIZADOR PROMOCIONES
+============================ */
+
+.promo-timer{
+
+margin-top:8px;
+
+font-size:14px;
+
+font-weight:600;
+
+color:#e85b87;
+
+background:#fff3f6;
+
+padding:6px 12px;
+
+border-radius:20px;
+
+display:inline-block;
+
+}
