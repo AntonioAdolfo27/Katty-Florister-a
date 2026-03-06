@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
 
   // =========================================
@@ -493,6 +492,99 @@ addAllToCart?.addEventListener("click", () => {
   closeFav();
 });
 
-}); 
 
-    
+// ======================================
+// CONTADOR OFERTAS
+// ======================================
+
+document.querySelectorAll(".contador-oferta").forEach(timer => {
+
+let time = parseInt(timer.dataset.time);
+
+function updateTimer(){
+
+const hours = Math.floor(time / 3600);
+const minutes = Math.floor((time % 3600) / 60);
+const seconds = time % 60;
+
+timer.textContent =
+"⏳ Oferta termina en " +
+hours + "h " +
+minutes + "m " +
+seconds + "s";
+
+if(time > 0){
+
+time--;
+
+}else{
+
+timer.textContent = "❌ Oferta terminada";
+
+}
+
+}
+
+setInterval(updateTimer,1000);
+
+});
+
+
+// ========================================
+// TEMPORIZADOR DE PROMOCIONES
+// ========================================
+
+const PROMO_DURATION = 24 * 60 * 60 * 1000; 
+// 24 horas
+
+document.querySelectorAll(".promo-timer").forEach(timer => {
+
+const id = timer.dataset.timer;
+
+let endTime = localStorage.getItem("promo_end_" + id);
+
+if(!endTime){
+
+endTime = Date.now() + PROMO_DURATION;
+
+localStorage.setItem("promo_end_" + id, endTime);
+
+}
+
+endTime = parseInt(endTime);
+
+function updateTimer(){
+
+const now = Date.now();
+
+const diff = endTime - now;
+
+if(diff <= 0){
+
+timer.innerHTML = "Oferta finalizada";
+
+return;
+
+}
+
+const hours = Math.floor(diff / (1000 * 60 * 60));
+
+const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+timer.querySelector(".time").textContent = 
+`${hours.toString().padStart(2,"0")}:
+${minutes.toString().padStart(2,"0")}:
+${seconds.toString().padStart(2,"0")}`;
+
+}
+
+updateTimer();
+
+setInterval(updateTimer,1000);
+
+});
+
+
+});
