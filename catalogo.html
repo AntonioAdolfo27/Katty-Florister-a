@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Catalogo | Premium</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="stylo.css">
+</head>
+
+<body>
+
+  <div class="nav-actions"></div>
+
+    <!-- ================= HEADER PREMIUM ================= -->
+<header class="header">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="container top-bar-content">
+      <span>🌸 Envíos rápidos en toda República Dominicana</span>
+      <span>📞 +1 809-000-0000</span>
+    </div>
+  </div>
+
+  <div class="container nav-container">
+
+    <!-- LOGO -->
+    <div class="logo">
+      <span class="logo-accent">Katty Floristería</span>
+    </div>
+
+    <!-- NAV PC -->
+    <nav class="nav">
+      <ul class="nav-links">
+
+        <li><a href="#">Inicio</a></li>
+
+        <!-- MEGA MENU PC -->
+        <li class="dropdown">
+          <a href="#">Catálogo ▾</a>
+          <div class="mega-menu">
+            <div class="mega-column">
+              <h4>Por Tipo</h4>
+              <a href="#">Rosas</a>
+              <a href="#">Tulipanes</a>
+              <a href="#">Orquídeas</a>
+              <a href="#">Flores Mixtas</a>
+            </div>
+
+            <div class="mega-column">
+              <h4>Por Ocasión</h4>
+              <a href="#">Cumpleaños</a>
+              <a href="#">San Valentín</a>
+              <a href="#">Aniversarios</a>
+              <a href="#">Peluche</a>
+            </div>
+
+            <div class="mega-column">
+              <h4>Premium</h4>
+              <a href="#">Luxury Box</a>
+              <a href="#">Edición Limitada</a>
+              <a href="#">bebidas</a>
+            </div>
+          </div>
+        </li>
+
+        <li><a href="#">Ofertas</a></li>
+        <li><a href="#">Cómo comprar</a></li>
+        <li><a href="#">Contacto</a></li>
+
+      </ul>
+    </nav>
+
+    <!-- ACCIONES -->
+    <div class="nav-actions">
+
+      <div class="search-box">
+        <input type="text" placeholder="Buscar flores premium...">
+      </div>
+
+      <div class="favorites-icon" id="openFavorites">
+  <i class="fa-solid fa-heart"></i>
+  <span class="favorites-count" id="favoritesCount">0</span>
+</div>
+
+      <!-- BOTÓN CARRITO PC -->
+<button class="cart-btn" id="openCart">
+  <i class="fas fa-shopping-bag"></i>
+  <span class="cart-count" id="floatingCount">0</span>
+</button>
+
+
+<div class="favorites-sidebar" id="favoritesSidebar">
+  <div class="favorites-header">
+    <h3>Mis Favoritos</h3>
+    <button id="closeFavorites">✕</button>
+  </div>
+
+  <div class="favorites-items" id="favoritesItems"></div>
+
+  <div class="favorites-footer">
+    <button id="addAllToCart">Agregar todos al carrito</button>
+  </div>
+</div>
+
+<div class="favorites-overlay" id="favoritesOverlay"></div>
+
+
+
+      <!-- BOTÓN HAMBURGUESA (DENTRO DEL HEADER) -->
+      <button class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+    </div>
+
+  </div>
+</header>
+
+   
+<!-- ================= OVERLAY ================= -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- ================= MENÚ MÓVIL ================= -->
+<div class="mobile-menu" id="mobileMenu">
+
+  <div class="mobile-header">
+    <h3>Katty Floristería</h3>
+  </div>
+
+  <nav class="mobile-nav-links" class="mobile-nav-links">
+
+    <a href="#">Inicio</a>
+
+     <!-- DROPDOWN MÓVIL -->
+    <div class="mobile-dropdown">
+
+      <div class="mobile-dropdown-header">
+        Catálogo <span class="arrow">▾</span>
+      </div>
+
+      <div class="mobile-submenu">
+        <h4>Por Tipo</h4>
+        <a href="#">Rosas</a>
+        <a href="#">Tulipanes</a>
+        <a href="#">Orquídeas</a>
+        <a href="#">Flores Mixtas</a>
+        <h4>Por Ocasión</h4>
+        <a href="#">Cumpleaños</a>
+        <a href="#">San Valentín</a>
+        <a href="#">Peluche</a>
+         <h4>Premium</h4>
+        <a href="#">Luxury Box</a>
+        <a href="#">Edición Limitada</a>
+        <a href="#">bebida</a>
+      </div>
+
+    </div>
+
+    <a href="#">Ofertas</a>
+    <a href="#">Cómo comprar</a>
+    <a href="#">Contacto</a>
+       <!-- REDES SOCIALES PREMIUM -->
+<div class="mobile-social">
+  <a href="#" aria-label="TikTok">
+    <i class="fab fa-tiktok"></i>
+  </a>
+  <a href="#" aria-label="Instagram">
+    <i class="fab fa-instagram"></i>
+  </a>
+  <a href="#" aria-label="WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+  <a href="#" aria-label="Facebook">
+    <i class="fab fa-facebook-f"></i>
+  </a>
+</div>
+
+  </nav>
+
+</div>
+
+
+<!-- ================= MODAL IMAGEN PRODUCTO ================= -->
+<div id="imageModal" class="image-modal">
+  <span class="close-image">&times;</span>
+  <img id="modalImage" src="" alt="Imagen ampliada">
+</div>
+
+
+
+<!-- ======================== CATALOGO ======================== -->
+<section id="catalogo" class="catalog-section">
+ 
+  <div class="container">
+
+    <h2 class="section-title">Nuestro Catálogo</h2>
+    <!-- FILTRO / MENU DE CATEGORIAS -->
+
+<div class="catalog-menu">
+
+<button class="menu-item active">Rosas</button>
+<button class="menu-item">Tulipanes</button>
+<button class="menu-item">Orquídeas</button>
+<button class="menu-item">Flores Mixtas</button>
+<button class="menu-item">Cumpleaños</button>
+<button class="menu-item">San Valentín</button>
+<button class="menu-item">Aniversarios</button>
+<button class="menu-item">Peluche</button>
+<button class="menu-item">Luxury Box</button>
+<button class="menu-item">Edición Limitada</button>
+<button class="menu-item">Bebidas</button>
+
+</div>
+
+       
+ <!-- ================= ROSAS ================= -->
+    <div class="category-block">
+      <h3 class="category-title">🌹Rosas</h3>
+
+      <div class="product-grid">
+
+        <!-- PRODUCTO 1 -->
+        <div class="product-card"
+             data-id="rosa-roja-001"
+             data-name="Rosa Roja Premium"
+             data-price="150">
+
+          <div class="product-image">
+
+            <img src="imagen1 de rosa.jpeg" alt="Rosa Roja Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Roja Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 2-->
+        <div class="product-card"
+             data-id="rosa-rosada-002"
+             data-name="Rosa Rosada Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen2 de rosa.jpeg" alt="Rosa Rosada Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Rosada Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 3-->
+        <div class="product-card"
+             data-id="rosa-blanca-003"
+             data-name="Rosa Blanca Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+          <h4>Rosa Blanca Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 4-->
+        <div class="product-card"
+             data-id="rosa-amarilla-004"
+             data-name="Rosa Amarrilla Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen4 de rosa .jpeg" alt="Rosa Amarrilla Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+          <h4>Rosa Amarrilla Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+
+    <!-- PRODUCTO 5 -->
+        <div class="product-card"
+             data-id="rosa-roja-005"
+             data-name="Rosa Roja Premium"
+             data-price="150">
+
+          <div class="product-image">
+
+            <img src="imagen5 de rosa .jpeg" alt="Rosa Roja Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Roja Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+   
+    </div>
+
+    
+    <!-- ================= Ocasiones Especiales ================= -->
+    <div class="category-block">
+      <h3 class="category-title">🎉 Ocasiones Especiales</h3>
+
+      <div class="product-grid">
+
+        <!-- PRODUCTO 6 -->
+        <div class="product-card"
+             data-id="rosa-roja-006"
+             data-name="Rosa Roja Premium"
+             data-price="150">
+
+          <div class="product-image">
+
+            <img src="imagen1 de rosa.jpeg" alt="Rosa Roja Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Roja Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 7-->
+        <div class="product-card"
+             data-id="rosa-rosada-007"
+             data-name="Rosa Rosada Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen2 de rosa.jpeg" alt="Rosa Rosada Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Rosada Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 8-->
+        <div class="product-card"
+             data-id="rosa-blanca-008"
+             data-name="Rosa Blanca Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+          <h4>Rosa Blanca Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 9-->
+        <div class="product-card"
+             data-id="arrelo-blanca-009"
+             data-name="Rosa Blanca Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+          <h4>Rosa Blanca Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+    <!-- PRODUCTO 10 -->
+        <div class="product-card"
+             data-id="rosa-roja-005"
+             data-name="Rosa Roja Premium"
+             data-price="150">
+
+          <div class="product-image">
+
+            <img src="imagen1 " alt="Rosa Roja Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Roja Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+   
+    </div>
+
+    
+    <!-- ================= Ocasiones Especiales ================= -->
+    <div class="category-block">
+      <h3 class="category-title">💎 Premium Luxury Box</h3>
+
+      <div class="product-grid">
+
+        <!-- PRODUCTO 11 -->
+        <div class="product-card"
+             data-id="rosa-roja-011"
+             data-name="Rosa Roja Premium"
+             data-price="150">
+
+          <div class="product-image">
+
+            <img src="imagen1 de rosa.jpeg" alt="Rosa Roja Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Roja Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 12-->
+        <div class="product-card"
+             data-id="rosa-rosada-012"
+             data-name="Rosa Rosada Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen2 de rosa.jpeg" alt="Rosa Rosada Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Rosada Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 13-->
+        <div class="product-card"
+             data-id="rosa-blanca-013"
+             data-name="Rosa Blanca Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+          <h4>Rosa Blanca Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+        <!-- PRODUCTO 14-->
+        <div class="product-card"
+             data-id="rosa-blanca-014"
+             data-name="Rosa Blanca Premium"
+             data-price="150">
+
+          <div class="product-image">
+            
+            <img src="imagen3 de rosa.jpeg" alt="Rosa Blanca Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+          <h4>Rosa Blanca Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+
+    <!-- PRODUCTO 15 -->
+        <div class="product-card"
+             data-id="rosa-roja-015"
+             data-name="Rosa Roja Premium"
+             data-price="150">
+
+          <div class="product-image">
+
+            <img src="imagen1 " alt="Rosa Roja Premium">
+          </div>
+          <button class="favorite-btn">
+            <i class="fa-regular fa-heart">
+            </i> </button>
+
+          <h4>Rosa Roja Premium</h4>
+          <p class="product-desc">Rosas frescas seleccionadas a mano.</p>
+
+          <div class="price">RD$ 150 UND</div>
+
+          <div class="product-actions">
+            <input type="number" min="1" value="1">
+            <button class="add-to-cart">Agregar al carrito</button>
+          </div>
+
+        </div>
+   
+    </div>
+
+   <div class="scroll-indicator">
+    <span></span>
+  </div>
+
+  </div>
+
+  
+</section>
+
+
+
+<section class="contact-section">
+
+<div class="container contact-grid">
+
+<!-- INFORMACION DE CONTACTO -->
+<div class="contact-info">
+
+<h2 class="contact-title">Contáctanos</h2>
+
+<p class="contact-description">
+Estamos listos para ayudarte a elegir las flores perfectas para cualquier ocasión. 
+Puedes visitarnos en nuestra tienda o comunicarte por cualquiera de estos medios.
+</p>
+
+<div class="contact-item">
+<span class="contact-icon">📍</span>
+<div>
+<h4>Dirección</h4>
+<p>Avenida Principal #123, Santo Domingo</p>
+<a class="map-link" href="https://maps.google.com" target="_blank">
+Abrir en Google Maps
+</a>
+</div>
+</div>
+
+<div class="contact-item">
+<span class="contact-icon">📞</span>
+<div>
+<h4>Teléfono</h4>
+<p>+1 (809) 000-0000</p>
+</div>
+</div>
+
+<div class="contact-item">
+<span class="contact-icon">💬</span>
+<div>
+<h4>WhatsApp</h4>
+<a href="https://wa.me/18090000000" target="_blank">
+Enviar mensaje
+</a>
+</div>
+</div>
+
+<div class="contact-item">
+<span class="contact-icon">✉️</span>
+<div>
+<h4>Email</h4>
+<p>contacto@tufloristeria.com</p>
+</div>
+</div>
+
+
+<!-- TARJETA DEL PROPIETARIO -->
+<div class="owner-card">
+
+<img src="img/propietario.jpg" alt="Propietario">
+
+<div>
+<h4>Katty Martinez</h4>
+<p>Fundador de la Floristería</p>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- MAPA -->
+<div class="contact-map">
+
+<iframe
+src="https://www.google.com/maps?q=Santo%20Domingo&output=embed"
+loading="lazy">
+</iframe>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ================= CARRITO FLOTANTE MOVIL ================= -->
+<button class="floating-cart" id="openCartMobile">
+  <i class="fas fa-shopping-bag"></i>
+  <span class="floating-count" id="floatingCount">0</span>
+</button>
+
+<!-- ================= OVERLAY CARRITO ================= -->
+<div class="cart-overlay" id="cartOverlay"></div>
+
+<!-- ================= SIDEBAR CARRITO ================= -->
+<div class="cart-sidebar" id="cartSidebar">
+
+  <div class="cart-header">
+    <h2>Tu Carrito</h2>
+    <button id="closeCart" class="close-cart">✕</button>
+  </div>
+
+  <div class="cart-items" id="cartItems"></div>
+
+  <div class="cart-summary">
+    <div class="summary-row">
+      <span>Total:</span>
+      <strong>RD$ <span id="cartTotal">0</span></strong>
+    </div>
+
+    <button class="checkout-btn" id="showCheckout">
+      Finalizar Compra
+    </button>
+  </div>
+
+  <!-- CHECKOUT INTERNO -->
+  <div class="checkout-inside" id="checkoutInside">
+
+    <h3>Información de Entrega</h3>
+
+    <form id="checkoutForm">
+
+  <div class="input-group">
+  <label>Nombre Completo</label>
+  <input type="text" id="customerName" required>
+</div>
+
+<div class="input-group">
+  <label>Teléfono</label>
+  <input type="tel" id="customerPhone" required>
+</div>
+
+<div class="input-group full-width">
+  <label>Correo Electrónico</label>
+  <input type="email" id="customerEmail" required>
+</div>
+
+<div class="input-group full-width">
+  <label>Dirección de Entrega</label>
+  <textarea id="customerAddress" required></textarea>
+</div>
+
+  <button type="submit" class="confirm-order">
+    Confirmar Pedido
+  </button>
+
+</form>
+  </div>
+
+</div>
+
+<!-- BOTON FLOTANTE WHATSAPP -->
+
+<a href="https://wa.me/18295893248" 
+   class="whatsapp-float" 
+    aria-label="Contactar por WhatsApp">
+   <span class="ws-tooltip">¿Necesitas ayuda?</span>
+
+   <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 32 32" 
+        width="28" 
+        height="28" 
+        fill="white">
+        <path d="M16.04 2C8.84 2 3 7.74 3 14.82c0 2.62.78 5.07 2.12 7.14L3 30l8.29-2.15c1.98 1.07 4.23 1.63 6.55 1.63 7.2 0 13.04-5.74 13.04-12.82C30.88 7.74 23.24 2 16.04 2zm0 23.4c-2.01 0-3.99-.54-5.72-1.57l-.41-.24-4.92 1.27 1.31-4.77-.27-.49c-1.16-2.1-1.77-4.48-1.77-6.87 0-6.01 5.17-10.9 11.52-10.9s11.52 4.89 11.52 10.9-5.17 10.9-11.52 10.9zm6.44-7.91c-.35-.18-2.07-1.01-2.39-1.13-.32-.12-.55-.18-.78.18-.23.35-.89 1.13-1.09 1.37-.2.23-.41.26-.76.09-.35-.18-1.49-.54-2.84-1.73-1.05-.94-1.76-2.1-1.96-2.46-.2-.35-.02-.54.15-.71.16-.16.35-.41.53-.61.18-.2.23-.35.35-.59.12-.23.06-.44-.03-.61-.09-.18-.78-1.88-1.07-2.58-.28-.67-.56-.58-.78-.59h-.67c-.23 0-.61.09-.93.44-.32.35-1.22 1.19-1.22 2.9 0 1.71 1.25 3.37 1.42 3.6.18.23 2.46 3.76 5.96 5.27.83.36 1.48.57 1.99.73.84.27 1.6.23 2.21.14.67-.1 2.07-.85 2.36-1.66.29-.81.29-1.5.2-1.66-.09-.16-.32-.26-.67-.44z"/>
+   </svg>
+
+</a>
+
+<script src="funciones.js"></script>
+
+</body>
+
+</html>
