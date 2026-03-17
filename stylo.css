@@ -22,6 +22,7 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
+  
 }
 
 html{
@@ -34,8 +35,9 @@ body{
   color:var(--white);
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
-  
-}
+ 
+
+  }
 
 
 
@@ -44,9 +46,9 @@ body{
 ===================================================== */
 .container{
   width:100%;
-  max-width:1400px;
+  max-width:1200px; /* baja un poco */
   margin:0 auto;
-  padding:0 20px;
+  padding:0 clamp(10px, 4vw, 30px);
 }
 
 img{
@@ -67,6 +69,8 @@ button{
 h1{ font-size:clamp(2rem,4vw,3.5rem); }
 h2{ font-size:clamp(1.5rem,3vw,2.5rem); }
 p{ font-size:clamp(.95rem,1.2vw,1.1rem); }
+
+
 
 /* =====================================================
    TOP BAR
@@ -525,12 +529,15 @@ iframe{
 
 .hero{
   position:relative;
-  height:100vh;
   display:flex;
   align-items:center;
   overflow:hidden;
   background:#0f0f14;
+  min-height:100vh;
+  height:auto;
+  padding:80px 0;
 }
+
 
 .hero-bg{
   position:absolute;
@@ -2610,14 +2617,22 @@ margin-bottom:30px;
 }
 
 .menu-item{
+
 padding:8px 16px;
+
 border-radius:30px;
+
 border:none;
-background: #16161f;
+
+background:#c2185b;
 cursor:pointer;
+
 font-size:14px;
+
 white-space:nowrap;
+
 transition:.3s;
+
 }
 
 .menu-item:hover{
@@ -2632,7 +2647,7 @@ color:rgb(255, 255, 255);
 
 background:#c2185b;
 
-color:white;
+color:rgb(255, 255, 255);
 
 }
 
@@ -2649,7 +2664,7 @@ margin-bottom:80px;
 font-size:1.8rem;
 margin-bottom:40px;
 padding-left:12px;
-border-left:4px solid #ff4b91;
+border-left:4px solid #ffffff;
 
 }
 
@@ -2657,7 +2672,7 @@ border-left:4px solid #ff4b91;
 
 .product-grid{
 
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(180%,1fr));
 
 gap:20px;
 
@@ -2665,7 +2680,7 @@ gap:20px;
 
 .product-image img{
 
-height:180px;
+height:180%;
 
 }
 
