@@ -271,22 +271,110 @@ showCheckoutBtn?.addEventListener("click", () => {
   checkoutInside?.classList.toggle("active");
 });
 
-checkoutForm?.addEventListener("submit", (e) => {
+// ===============================
+// CHECKOUT PRO (WHATSAPP)
+// ===============================
 
+checkoutForm?.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  // Generar número de orden automático
+  // ============================
+  // DATOS DEL FORM (TU HTML)
+  // ============================
+
+  const nombre = document.getElementById("customerName").value.trim();
+  const telefono = document.getElementById("customerPhone").value.trim();
+  const correo = document.getElementById("customerEmail").value.trim();
+  const direccion = document.getElementById("customerAddress").value.trim();
+
+  if (!nombre || !telefono || !direccion) {
+    showToast("Completa todos los campos obligatorios");
+    return;
+  }
+
+  // ============================
+  // VALIDACIÓN PRO
+  // ============================
+
+  if (telefono.length < 8) {
+    showToast("Teléfono inválido");
+    return;
+  }
+
+  // ============================
+  // GENERAR ORDEN
+  // ============================
+
   const orderNumber = "ORD-" + Date.now();
 
-  showToast("🎉 Pedido confirmado #" + orderNumber);
+  // ============================
+  // PRODUCTOS
+  // ============================
+
+  if (store.cart.length === 0) {
+  showToast("El carrito está vacío");
+  return;
+}
+
+let productosTexto = "";
+let total = 0;
+
+store.cart.forEach(item => {
+  const subtotal = item.price * item.qty;
+  total += subtotal;
+
+  productosTexto += `• ${item.name} x${item.qty} = RD$ ${subtotal.toFixed(2)}\n`;
+});
+
+  // ============================
+  // MENSAJE ESTILO AMAZON
+  // ============================
+
+const fecha = new Date().toLocaleString("es-DO");
+const mensaje =
+"📨 *PEDIDO*\n\n" + 
+
+
+"📦 Orden: " + orderNumber + "\n" +
+"📆 Fecha: " + new Date().toLocaleString("es-DO") + "\n\n" +
+
+"👤 Cliente: " + nombre + "\n" +
+"📮 Teléfono: " + telefono + "\n" +
+"📧 Correo: " + correo + "\n" +
+"📍 Dirección: " + direccion + "\n\n" +
+
+"🛒 *Productos:*\n" +
+productosTexto + "\n" +
+
+"💰 *Total: RD$ " + total.toFixed(2) + "*\n\n" +
+
+"⏰Confirmar disponibilidad y tiempo de entrega\n"
+ +
+"🛍️ KATTY FLORISTERÍA";
+  // ============================
+  // ENVIAR A WHATSAPP
+  // ============================
+
+  const numeroNegocio = "18295893248"; // ✅ YA PUSE TU NÚMERO
+
+  const url = `https://wa.me/${numeroNegocio}?text=${encodeURIComponent(mensaje)}`;
+
+  window.open(url, "_blank");
+
+  // ============================
+  // LIMPIAR TODO
+  // ============================
+
+  showToast("Pedido enviado correctamente 🚀");
 
   store.clear();
   renderCart();
 
+  checkoutForm.reset();
+
   checkoutInside?.classList.remove("active");
   closeCart();
 });
-
 
 // =====================================================
 // TOAST PROFESIONAL
