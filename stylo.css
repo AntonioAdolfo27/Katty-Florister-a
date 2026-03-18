@@ -24,9 +24,12 @@
   box-sizing:border-box;
 }
 
-html{
-  scroll-behavior:smooth;
+/* Evita scroll lateral */
+html, body {
+  width: 100%;
+  overflow-x:hidden;
 }
+
 
 body{
   font-family:'Poppins',sans-serif;
@@ -34,6 +37,7 @@ body{
   color:var(--white);
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
+  max-width: 100%;
   
 }
 
@@ -94,6 +98,11 @@ p{ font-size:clamp(.95rem,1.2vw,1.1rem); }
   position:sticky;
   top:0;
   z-index:1000;
+}
+
+header, .navbar {
+  width: 100%;
+  max-width: 100%;
 }
 
 .nav-container{
@@ -272,8 +281,8 @@ p{ font-size:clamp(.95rem,1.2vw,1.1rem); }
   position:fixed;
   top:0;
   right:-100%;
-  width:320px;
-  max-width:90%;
+  width:85%;
+  max-width:320px;
   height:100dvh; /* altura real del dispositivo */
   background:linear-gradient(180deg,#1a1a22,#0f0f14);
   box-shadow:-10px 0 30px rgba(0,0,0,.5);
@@ -490,7 +499,6 @@ iframe{
 /* =========================================
    REDES SOCIALES PREMIUM MENU MOVIL
 ========================================= */
-
 .mobile-social{
   margin-top:auto;
   padding-top:30px;
@@ -525,11 +533,13 @@ iframe{
 
 .hero{
   position:relative;
-  height:100vh;
   display:flex;
   align-items:center;
   overflow:hidden;
   background:#0f0f14;
+  min-height: 100vh;
+  height: auto;
+  padding: 80px 20px;
 }
 
 .hero-bg{
@@ -540,19 +550,12 @@ iframe{
   radial-gradient(circle at 20% 30%, rgba(255,75,145,.15), transparent 40%),
     radial-gradient(circle at 80% 70%, rgba(255,126,179,.15), transparent 40%);
   animation:floatBackground 12s ease-in-out infinite alternate;
-@keyframes floatBackground{
-  from{ transform:translateY(-20px);}
-  to{ transform:translateY(20px);}
 }
-}
-
 
 @keyframes floatBackground{
   from{ transform:translateY(-20px);}
   to{ transform:translateY(20px);}
 }
-
-
 
 
 .hero-content{
@@ -966,8 +969,8 @@ transform:scale(1.1);
   position:fixed;
   top:0;
   right:-450px;
-  width:400px;
-  max-width:95%;
+  width:100%;
+  max-width:350px;
   height:100vh;
   background:linear-gradient(180deg,#111218,#0f0f14);
   display:flex;
@@ -1442,15 +1445,15 @@ transform:scale(1.1);
    ============ CATÁLOGO DESLIZABLE MÓVIL ============
 ===================================================== */
 
-@media (max-width: 768px) {
+@media (max-width:768px){
 
-  .product-grid {
-    display: flex;
-    overflow-x: auto;
-    gap: 20px;
-    scroll-behavior: smooth;
-    padding-bottom: 5px;
+  .product-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    overflow-x:hidden;
   }
+
+}
 
   .product-grid::-webkit-scrollbar {
     display: none;
@@ -1750,7 +1753,6 @@ transform:scale(1.2);
   position: fixed;
   right: -400px;
   top: 0;
-  width: 350px;
   height: 100%;
   background: white;
   box-shadow: -5px 0 20px rgba(0,0,0,.2);
@@ -1758,7 +1760,10 @@ transform:scale(1.2);
   z-index: 999;
   display: flex;
   flex-direction: column;
+  width:100%;
+  max-width:320px;
 }
+
 
 .favorites-sidebar.active {
   right: 0;
@@ -1799,32 +1804,6 @@ transform:scale(1.2);
   border-radius: 8px;
 }
 
-/* ================================
-   BOTON WHATSAPP FLOTANTE PRO
-================================ */
-
-.whatsapp-float{
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-
-  width: 60px;
-  height: 60px;
-
-  background: #25D366;
-  border-radius: 50%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-
-  cursor: pointer;
-  z-index: 9999;
-
-  transition: all .3s ease;
-}
 
 /* Hover PC */
 
@@ -2727,3 +2706,43 @@ padding:8px;
         transform: translate(-50%, 5px);
     }
 }
+
+/* ===== FIX GLOBAL RESPONSIVE ===== */
+
+html, body{
+  overflow-x:hidden;
+}
+
+/* HERO FIX */
+.hero{
+  min-height:100vh;
+  height:auto;
+  padding:80px 0;
+}
+
+/* GRID FIX */
+@media (max-width:768px){
+  .product-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    overflow-x:hidden;
+  }
+}
+
+/* SIDEBAR FIX */
+.cart-sidebar{
+  width:100%;
+  max-width:350px;
+}
+
+.favorites-sidebar{
+  width:100%;
+  max-width:320px;
+}
+
+/* MENU FIX */
+.mobile-menu{
+  width:85%;
+  max-width:320px;
+}
+
