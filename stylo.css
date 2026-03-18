@@ -1,3 +1,4 @@
+
 /* =====================================================
    VARIABLES GLOBALES
 ===================================================== */
@@ -92,8 +93,6 @@ p{ font-size:clamp(.95rem,1.2vw,1.1rem); }
 ===================================================== */
 .header{
   background:rgba(26,26,34,.9);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
   position:sticky;
   top:0;
@@ -265,7 +264,6 @@ header, .navbar {
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.6);
-  backdrop-filter:blur(6px);
   opacity:0;
   visibility:hidden;
   transition:.4s ease;
@@ -518,7 +516,6 @@ iframe{
   font-size:1.2rem;
   color:#fff;
   transition:all .3s ease;
-  backdrop-filter:blur(10px);
 }
 
 .mobile-social a:hover{
@@ -572,7 +569,6 @@ iframe{
   font-size:.85rem;
   background:rgba(255,255,255,0.06);
   color:#ff7eb3;
-  backdrop-filter:blur(10px);
 }
 
 .hero-title{
@@ -901,7 +897,6 @@ transform:scale(1.1);
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.92);
-  backdrop-filter:blur(8px);
   display:flex;
   justify-content:center;
   align-items:center;
@@ -950,7 +945,6 @@ transform:scale(1.1);
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.65);
-  backdrop-filter:blur(6px);
   opacity:0;
   visibility:hidden;
   transition:.4s ease;
@@ -1464,7 +1458,7 @@ transform:scale(1.1);
     flex-shrink: 0;
   }
 
-}
+
 
 /* =====================================================
    ================= MODAL IMAGEN ======================
@@ -1526,7 +1520,6 @@ transform:scale(1.1);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
     padding-bottom: 10px;
   }
 
@@ -2745,4 +2738,3 @@ html, body{
   width:85%;
   max-width:320px;
 }
-
