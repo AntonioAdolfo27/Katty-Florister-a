@@ -1,4 +1,4 @@
-my no document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
 
   // =========================================
   // ESTADO GLOBAL PROFESIONAL (STORE)
@@ -332,14 +332,14 @@ store.cart.forEach(item => {
 
 const fecha = new Date().toLocaleString("es-DO");
 const mensaje =
-"📢*PEDIDO*\n\n" + 
+"📨 *PEDIDO*\n\n" + 
 
 
 "📦 Orden: " + orderNumber + "\n" +
 "📆 Fecha: " + new Date().toLocaleString("es-DO") + "\n\n" +
 
 "👤 Cliente: " + nombre + "\n" +
-"📞Teléfono: " + telefono + "\n" +
+"📮 Teléfono: " + telefono + "\n" +
 "📧 Correo: " + correo + "\n" +
 "📍 Dirección: " + direccion + "\n\n" +
 
