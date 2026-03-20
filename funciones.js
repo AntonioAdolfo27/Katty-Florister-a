@@ -676,4 +676,105 @@ setInterval(updateTimer,1000);
 
 
 
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const target = document.querySelector(this.getAttribute('href'));
+
+    if(target){
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  });
+});
+
+
+// ======================================
+// SMART BAR INTELIGENTE (ULTRA PRO)
+// ======================================
+
+function smartBarSystem(){
+
+  const status = document.getElementById("smartStatus");
+  const dot = document.getElementById("smartDot");
+  const info = document.getElementById("smartInfo");
+  const proof = document.getElementById("smartProof");
+  const schedule = document.getElementById("smartSchedule");
+
+  if(!status) return;
+
+  const now = new Date();
+  const day = now.getDay();
+  const hour = now.getHours();
+
+  // =========================
+  // HORARIO TEXTO (FIJO)
+  // =========================
+
+  const scheduleText = "Lun-Sáb: 8AM - 8PM | Dom: 9AM - 2PM";
+  schedule.textContent = scheduleText;
+
+  // =========================
+  // DEFINIR HORARIO ACTUAL
+  // =========================
+
+  let openTime, closeTime;
+
+  if(day === 0){
+    openTime = 9;
+    closeTime = 14;
+  } else {
+    openTime = 8;
+    closeTime = 20;
+  }
+
+  // =========================
+  // ESTADO
+  // =========================
+
+  if(hour >= openTime && hour < closeTime){
+    status.textContent = "Abierto ahora";
+    dot.style.background = "#28c76f";
+  }else{
+    status.textContent = "Cerrado";
+    dot.style.background = "#ea5455";
+  }
+
+  // =========================
+  // MENSAJES DINÁMICOS
+  // =========================
+
+  const demandMessages = [
+    "🔥 Alta demanda hoy",
+    "🌸 Productos frescos disponibles",
+    "🚀 Entregas el mismo día",
+    "💎 Arreglos premium disponibles",
+    "🎁 Ofertas activas ahora"
+  ];
+
+  info.textContent = demandMessages[Math.floor(Math.random()*demandMessages.length)];
+
+  // =========================
+  // PRUEBA SOCIAL
+  // =========================
+
+  const names = ["Ana","Carlos","María","Luis","Sofía","Pedro"];
+  const zones = ["Santo Domingo","Santiago","La Vega","San Cristóbal"];
+
+  const name = names[Math.floor(Math.random()*names.length)];
+  const zone = zones[Math.floor(Math.random()*zones.length)];
+
+  proof.textContent = `🛍️ ${name} compró hace ${Math.floor(Math.random()*5)+1} min (${zone})`;
+
+}
+
+// ACTUALIZA CADA 6 SEGUNDOS
+smartBarSystem();
+setInterval(smartBarSystem, 6000);
+
+
+
 });
