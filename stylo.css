@@ -1325,6 +1325,10 @@ transform:scale(1.1);
    ================== CARRITO PREMIUM ==================
 ===================================================== */
 
+/* =====================================================
+   ================== CARRITO PREMIUM ==================
+===================================================== */
+
 .cart-item {
   display: flex;
   align-items: center;
@@ -1442,17 +1446,7 @@ transform:scale(1.1);
    ============ CATÁLOGO DESLIZABLE MÓVIL ============
 ===================================================== */
 
-@media (max-width:768px){
-
-  .product-grid{
-    display:grid;
-    grid-template-columns:1fr;
-    overflow-x:hidden;
-  }
-
-}
-
-  .product-grid::-webkit-scrollbar {
+.product-grid::-webkit-scrollbar {
     display: none;
   }
 
@@ -1460,8 +1454,6 @@ transform:scale(1.1);
     min-width: 80%;
     flex-shrink: 0;
   }
-
-
 
 /* =====================================================
    ================= MODAL IMAGEN ======================
@@ -1551,7 +1543,343 @@ transform:scale(1.1);
 
 }
 
+.product-grid {
+  scroll-behavior: smooth;
+}
 
+.product-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:active {
+  transform: scale(0.97);
+}
+
+
+.product-grid {
+  scroll-behavior: smooth;
+}
+
+.product-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:active {
+  transform: scale(0.97);
+}
+
+/* ===============================
+   CARRITO SCROLL PROFESIONAL
+================================= */
+
+.cart-items {
+  max-height: 60vh; /* ocupa máximo 60% de la pantalla */
+  overflow-y: auto;
+  padding-right: 5px;
+   
+}
+
+/* Scroll elegante */
+.cart-items::-webkit-scrollbar {
+  width: 6px;
+   
+}
+
+.cart-items::-webkit-scrollbar-thumb {
+  background: #25D366;
+  border-radius: 10px;
+   
+}
+
+.cart-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cart {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+   
+}
+
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+}
+
+
+
+
+.btn-ir {
+  display: block;              /* importante */
+  width: fit-content;          /* ajusta al tamaño del texto */
+  margin: 20px auto;           /* lo centra horizontalmente */
+  padding: 12px 20px;
+  background: linear-gradient(135deg,#ff4b90,#ff7eb3);
+  text-decoration: none;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: 0.3s;
+  text-align: center;
+}
+
+.btn-ir:hover {
+  background: #25D366;
+  color: white;
+}
+
+.btn-ir {
+  display: block;
+  width: fit-content;
+  margin: 20px auto;
+  padding: 12px 20px;
+  background: linear-gradient(135deg,#ff4b90,#ff7eb3);
+  text-decoration: none;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  transition: 0.3s;
+}
+
+.btn-ir:hover {
+  background: #25D366;
+  color: white;
+}
+
+@media (max-width: 768px) {
+
+  .btn-ir {
+    width: 90%;          /* ocupa casi todo el ancho */
+    max-width: 400px;    /* no se hace exageradamente grande */
+    font-size: 16px;
+    padding: 14px;
+  }
+
+}
+
+
+
+#toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #25D366;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.4s;
+  z-index: 9999;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+.favorite-btn{
+
+position:absolute;
+
+top:10px;
+
+right:10px;
+
+width:36px;
+
+height:36px;
+
+border-radius:50%;
+
+border:none;
+
+background:white;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+box-shadow:0 5px 15px rgba(0,0,0,0.15);
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+.favorite-btn.active{
+
+color:#ff2e63;
+
+transform:scale(1.2);
+
+}
+
+.favorite-btn i {
+  font-size: 20px;
+  color: #ff0000;
+  transition: 0.3s;
+}
+
+.favorite-btn.active i {
+  color: #e91e63;
+  transform: scale(1.2);
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+
+
+.favorites-icon {
+  position: relative;
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.favorites-icon i {
+  font-size: 22px;
+  color: #e91e63;
+}
+
+.favorites-count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: black;
+  color: white;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 50%;
+}
+
+
+.favorites-sidebar {
+  position: fixed;
+  right: -400px;
+  top: 0;
+  height: 100%;
+  background: white;
+  box-shadow: -5px 0 20px rgba(0,0,0,.2);
+  transition: .4s;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  width:100%;
+  max-width:320px;
+}
+
+
+.favorites-sidebar.active {
+  right: 0;
+}
+
+.favorites-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: .3s;
+}
+
+.favorites-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.favorites-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.favorites-footer {
+  padding: 15px;
+  border-top: 1px solid #eee;
+}
+
+#addAllToCart {
+  width: 100%;
+  padding: 12px;
+  background: #e91e63;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+
+/* Hover PC */
+
+.whatsapp-float:hover{
+  transform: scale(1.1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* Tooltip */
+
+.ws-tooltip{
+  position: absolute;
+  right: 75px;
+  background: #111;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+
+  font-size: 13px;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all .3s ease;
+
+  white-space: nowrap;
+}
+
+.whatsapp-float:hover .ws-tooltip{
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Animación de llamada */
+
+@keyframes pulseWS{
+  0%{
+    box-shadow:0 0 0 0 rgba(37,211,102,0.7);
+  }
+  70%{
+    box-shadow:0 0 0 15px rgba(37,211,102,0);
+  }
+  100%{
+    box-shadow:0 0 0 0 rgba(37,211,102,0);
+  }
+}
+
+.whatsapp-float{
+  animation: pulseWS 2.5s infinite;
+}
+
+/* MOVIL */
+
+@media (max-width:768px){
+
+.whatsapp-float{
+  width:55px;
+  height:55px;
+  bottom:20px;
+  right:20px;
+}
+
+.ws-tooltip{
+  display:none;
+}
+
+}
 
 /* ===============================
    CARRITO SCROLL PROFESIONAL
@@ -2714,6 +3042,7 @@ html, body{
   min-height:100vh;
   height:auto;
   padding:80px 0;
+  
 }
 
 /* GRID FIX */
@@ -2740,4 +3069,115 @@ html, body{
 .mobile-menu{
   width:85%;
   max-width:320px;
+}
+
+/* =========================================
+   SMART BAR ULTRA PREMIUM (NUNCA VISTO)
+========================================= */
+
+.smart-bar{
+background:linear-gradient(90deg,#fff7fa,#ffffff,#fff7fa);
+border-top:1px solid rgba(0,0,0,0.05);
+padding:12px 0;
+font-size:13px;
+overflow:hidden;
+position:relative;
+}
+
+.smart-wrapper{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:20px;
+flex-wrap:wrap;
+}
+
+/* DOT DINÁMICO */
+
+.smart-dot{
+width:10px;
+height:10px;
+border-radius:50%;
+animation:pulse 2s infinite;
+}
+
+/* TEXTO */
+
+.smart-left,
+.smart-center,
+.smart-right{
+display:flex;
+align-items:center;
+gap:10px;
+color:#444;
+}
+
+/* EFECTO DESTACADO */
+
+.smart-center{
+font-weight:500;
+color:#ff4b91;
+}
+
+/* EFECTO SCROLL EN MÓVIL */
+
+@media(max-width:768px){
+
+.smart-wrapper{
+flex-direction:column;
+text-align:center;
+gap:6px;
+}
+
+.smart-center{
+font-size:12px;
+}
+
+}
+
+/* HORARIO TEXTO */
+#smartSchedule{
+font-size:11px;
+color:#000000;
+display:block;
+margin-top:2px;
+}
+
+/* =========================================
+   FIX DEFINITIVO SLIDER MÓVIL
+========================================= */
+
+@media (max-width: 768px) {
+
+  .product-grid {
+    display: flex !important; /* 🔥 FORZAMOS */
+    flex-wrap: nowrap !important; /* 🔥 evita que bajen */
+    
+    overflow-x: auto !important;
+    overflow-y: hidden;
+
+    gap: 16px;
+
+    padding: 10px;
+
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .product-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .product-card {
+    min-width: 260px; /* 🔥 CLAVE */
+    max-width: 280px;
+
+    flex: 0 0 auto; /* 🔥 NO SE ENCOGE */
+    scroll-snap-align: center;
+  }
+
+}
+
+.category-block {
+  overflow: hidden;
 }
