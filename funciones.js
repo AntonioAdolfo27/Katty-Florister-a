@@ -775,6 +775,175 @@ function smartBarSystem(){
 smartBarSystem();
 setInterval(smartBarSystem, 6000);
 
+// ======================================
+// SISTEMA PROFESIONAL DE PLANES
+// ======================================
+
+const ClientSystem = {
+
+  // Obtener datos
+  getData(){
+    return {
+      name: document.getElementById("clientName").value.trim(),
+      phone: document.getElementById("clientPhone").value.trim(),
+      address: document.getElementById("clientAddress").value.trim(),
+      event: document.getElementById("paymentMethod").value
+    };
+  },
+
+  // Validar formulario
+  validate(data){
+
+    let valid = true;
+
+    const fields = [
+      {id:"clientName", val:data.name},
+      {id:"clientPhone", val:data.phone},
+      {id:"clientAddress", val:data.address}
+    ];
+
+    fields.forEach(f => {
+      const input = document.getElementById(f.id);
+
+      if(f.val === ""){
+        input.classList.add("input-error");
+        valid = false;
+      } else {
+        input.classList.remove("input-error");
+      }
+    });
+
+    // Validar select (evento)
+    const eventSelect = document.getElementById("paymentMethod");
+
+    if(!data.event){
+      eventSelect.classList.add("input-error");
+      valid = false;
+    } else {
+      eventSelect.classList.remove("input-error");
+    }
+
+    return valid;
+  },
+
+  // Crear mensaje PRO
+  buildMessage(data, plan){
+
+    return `
+🌸 *FLORISTERÍA - SOLICITUD DE CONTRATACIÓN*
+━━━━━━━━━━━━━━━━━━
+
+👤 Cliente: ${data.name}
+📞 Teléfono: ${data.phone}
+📍 Dirección: ${data.address}
+
+🎉 Evento: ${data.event}
+
+━━━━━━━━━━━━━━━━━━
+
+💼 PLAN SELECCIONADO:
+${plan}
+
+━━━━━━━━━━━━━━━━━━
+
+📌 Detalle:
+Estoy interesado en este plan. Me gustaría recibir información completa para proceder con la contratación.
+
+Gracias 🌷
+`;
+  },
+
+  // Enviar a WhatsApp
+  send(message){
+
+    const numero = "18295893248"; // 🔥 CAMBIA ESTO
+
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(message)}`;
+
+    window.open(url, "_blank");
+  }
+
+};
+
+
+// ======================================
+// EVENTO BOTONES PLAN (VALIDACIÓN)
+// ======================================
+
+document.addEventListener("click", function(e){
+
+  const btn = e.target.closest(".plan-btn");
+  if(!btn) return;
+
+  e.preventDefault();
+
+  const data = ClientSystem.getData();
+
+  // ❌ VALIDACIÓN
+  if(!ClientSystem.validate(data)){
+    showToast("⚠️ Primero debes completar el formulario");
+    return;
+  }
+
+  // ✅ CONTINUAR
+  const plan = btn.dataset.plan;
+
+  const message = ClientSystem.buildMessage(data, plan);
+
+  ClientSystem.send(message);
+
+});
+
+
+// ======================================
+// LIMPIAR ERRORES AL ESCRIBIR (UX PRO)
+// ======================================
+
+document.querySelectorAll(".client-form input, .client-form select")
+.forEach(input => {
+
+  input.addEventListener("input", () => {
+    input.classList.remove("input-error");
+  });
+
+});
+
+// ======================================
+// EFECTO 3D REAL EN TARJETAS
+// ======================================
+
+document.querySelectorAll(".plan-card").forEach(card => {
+
+  card.addEventListener("mousemove", (e) => {
+
+    const rect = card.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = -(y - centerY) / 12;
+    const rotateY = (x - centerX) / 12;
+
+    card.style.transform = `
+      rotateX(${rotateX}deg)
+      rotateY(${rotateY}deg)
+      scale(1.05)
+    `;
+
+    // brillo dinámico
+    card.style.setProperty("--x", `${x}px`);
+    card.style.setProperty("--y", `${y}px`);
+
+  });
+
+  card.addEventListener("mouseleave", () => {
+    card.style.transform = "rotateX(0) rotateY(0) scale(1)";
+  });
+
+});
 
 
 });
