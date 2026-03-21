@@ -1,3 +1,4 @@
+
 /* =====================================================
    VARIABLES GLOBALES
 ===================================================== */
@@ -3180,4 +3181,255 @@ margin-top:2px;
 
 .category-block {
   overflow: hidden;
+}
+
+
+
+/* ===============================
+   PLANES PREMIUM
+================================= */
+
+.plans-section{
+  padding:100px 0;
+  background:linear-gradient(180deg,#000000,#ff005d5f);
+}
+
+.plans-wrapper{
+  position:relative;
+}
+
+.plans-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:30px;
+}
+
+/* TARJETAS */
+.plan-card{
+  background:#000000;
+  border-radius:20px;
+  padding:30px;
+  text-align:center;
+  box-shadow:0 15px 40px rgba(0,0,0,.08);
+  transition:.4s ease;
+  position:relative;
+}
+
+.plan-card:hover{
+  transform:translateY(-10px);
+}
+
+/* COLORES */
+.plan-card.basic{
+  border-top:4px solid #ccc;
+}
+
+.plan-card.pro{
+  border-top:4px solid #ff7eb3;
+  transform:scale(1.05);
+}
+
+.plan-card.ultra{
+  border-top:4px solid #ff4b91;
+}
+
+/* BADGE */
+.badge{
+  position:absolute;
+  top:-10px;
+  right:20px;
+  background:#ff4b91;
+  color:#fff;
+  padding:5px 12px;
+  border-radius:20px;
+  font-size:.8rem;
+}
+
+/* PRECIO */
+.plan-price{
+  font-size:2rem;
+  color:#ff4b91;
+  margin:15px 0;
+}
+
+/* LISTA */
+.plan-card ul{
+  list-style:none;
+  padding:0;
+  margin:20px 0;
+}
+
+.plan-card li{
+  margin:10px 0;
+  color:#ffffff88;
+}
+
+/* BOTÓN */
+.plan-btn{
+  display:inline-block;
+  padding:12px 25px;
+  border-radius:40px;
+  background:linear-gradient(135deg,#ff4b91,#ff7eb3);
+  color:#fff;
+  text-decoration:none;
+  transition:.3s;
+}
+
+.plan-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 25px rgba(255,75,145,.3);
+}
+
+/* ===============================
+   SLIDER MÓVIL PRO
+================================= */
+
+@media (max-width:768px){
+
+  .plans-grid{
+    display:flex;
+    overflow-x:auto;
+    gap:20px;
+    padding:10px;
+    scroll-snap-type:x mandatory;
+  }
+
+  .plans-grid::-webkit-scrollbar{
+    display:none;
+  }
+
+  .plan-card{
+    min-width:280px;
+    flex:0 0 auto;
+    scroll-snap-align:center;
+  }
+
+}
+
+/* =========================================
+   FORMULARIO PREMIUM INTEGRADO
+========================================= */
+
+.client-form{
+  margin-top:50px;
+
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:20px;
+
+  padding:30px;
+  border-radius:20px;
+
+  background:rgba(0, 0, 0, 0.072);
+  backdrop-filter:blur(12px);
+
+  border:1px solid rgba(255, 255, 255, 0);
+
+  box-shadow:0 20px 50px rgba(0,0,0,0.08);
+
+  position:relative;
+  overflow:hidden;
+
+  transition:.4s cubic-bezier(.77,0,.18,1);
+}
+
+/* EFECTO SUTIL COMO LOS PLANES */
+.client-form:hover{
+  transform:translateY(-5px);
+  box-shadow:0 25px 60px rgb(0, 0, 0);
+}
+
+/* EFECTO LUZ PREMIUM */
+.client-form::before{
+  content:"";
+  position:absolute;
+  top:-50%;
+  left:-50%;
+  width:200%;
+  height:200%;
+  background:linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 93, 149, 0.108),
+    transparent
+  );
+  transform:rotate(25deg);
+  pointer-events:none;
+}
+
+/* INPUT GROUP */
+
+.input-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+/* LABELS */
+
+.input-group label{
+  font-size:13px;
+  font-weight:600;
+  color:#666;
+  margin-left:2px;
+}
+
+/* INPUTS Y SELECT */
+
+.client-form input,
+.client-form select{
+  padding:13px;
+  border-radius:12px;
+  border:1px solid #000000;
+  outline:none;
+  font-size:14px;
+
+  background:#000000;
+
+  transition:.3s ease;
+}
+
+/* EFECTO FOCUS PRO */
+
+.client-form input:focus,
+.client-form select:focus{
+  border-color:#00000000;
+  box-shadow:0 0 0 4px rgb(255, 92, 160);
+  transform:scale(1.02);
+}
+
+/* ERROR */
+
+.input-error{
+  border-color:#fd0000 !important;
+  background:#fff5f5;
+}
+
+/* EFECTO HOVER INPUT */
+
+.client-form input:hover,
+.client-form select:hover{
+  border-color:#ffffff;
+}
+
+/* =========================================
+   RESPONSIVE PERFECTO
+========================================= */
+
+@media(max-width:768px){
+
+  .client-form{
+    grid-template-columns:1fr 1fr;
+    padding:20px;
+    gap:15px;
+  }
+
+}
+
+@media(max-width:480px){
+
+  .client-form{
+    grid-template-columns:1fr;
+  }
+
 }
