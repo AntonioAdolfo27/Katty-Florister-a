@@ -831,7 +831,7 @@ const ClientSystem = {
 
     return `
 🌸 *FLORISTERÍA - SOLICITUD DE CONTRATACIÓN*
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
 👤 Cliente: ${data.name}
 📞 Teléfono: ${data.phone}
@@ -839,12 +839,12 @@ const ClientSystem = {
 
 🎉 Evento: ${data.event}
 
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
 💼 PLAN SELECCIONADO:
 ${plan}
 
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
 📌 Detalle:
 Estoy interesado en este plan. Me gustaría recibir información completa para proceder con la contratación.
