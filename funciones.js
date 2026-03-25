@@ -355,7 +355,7 @@ productosTexto + "\n" +
   // ENVIAR A WHATSAPP
   // ============================
 
-  const numeroNegocio = "18295893248"; // ✅ YA PUSE TU NÚMERO
+  const numeroNegocio = "118294317622"; // ✅ YA PUSE TU NÚMERO
 
   const url = `https://wa.me/${numeroNegocio}?text=${encodeURIComponent(mensaje)}`;
 
@@ -714,7 +714,7 @@ function smartBarSystem(){
   // HORARIO TEXTO (FIJO)
   // =========================
 
-  const scheduleText = "Lun-Sáb: 8AM - 8PM | Dom: 9AM - 2PM";
+  const scheduleText = "Lun-Sáb: 6:30AM - 5:30PM | Dom: 6:30AM - 12PM";
   schedule.textContent = scheduleText;
 
   // =========================
@@ -831,7 +831,7 @@ const ClientSystem = {
 
     return `
 🌸 *FLORISTERÍA - SOLICITUD DE CONTRATACIÓN*
-━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━
 
 👤 Cliente: ${data.name}
 📞 Teléfono: ${data.phone}
@@ -839,12 +839,12 @@ const ClientSystem = {
 
 🎉 Evento: ${data.event}
 
-━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━
 
 💼 PLAN SELECCIONADO:
 ${plan}
 
-━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━
 
 📌 Detalle:
 Estoy interesado en este plan. Me gustaría recibir información completa para proceder con la contratación.
@@ -856,7 +856,7 @@ Gracias 🌷
   // Enviar a WhatsApp
   send(message){
 
-    const numero = "18295893248"; // 🔥 CAMBIA ESTO
+    const numero = "18294317622"; // 🔥 CAMBIA ESTO
 
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(message)}`;
 
