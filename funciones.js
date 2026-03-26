@@ -715,21 +715,21 @@ function smartBarSystem(){
   // =========================
 
   const scheduleText = "Lun-Sáb: 6:30AM - 5:30PM | Dom: 6:30AM - 12PM";
-  schedule.textContent = scheduleText;
+schedule.textContent = scheduleText;
 
-  // =========================
-  // DEFINIR HORARIO ACTUAL
-  // =========================
+// =========================
+// DEFINIR HORARIO ACTUAL
+// =========================
 
-  let openTime, closeTime;
+let openTime, closeTime;
 
-  if(day === 0){
-    openTime = 9;
-    closeTime = 14;
-  } else {
-    openTime = 8;
-    closeTime = 20;
-  }
+if(day === 0){
+  openTime = 6 * 60 + 30;  // 6:30 AM domingo
+  closeTime = 12 * 60;     // 12:00 PM
+} else {
+  openTime = 6 * 60 + 30;  // 6:30 AM lun-sab
+  closeTime = 17 * 60 + 30;// 5:30 PM
+}
 
   // =========================
   // ESTADO
@@ -748,11 +748,20 @@ function smartBarSystem(){
   // =========================
 
   const demandMessages = [
-    "🔥 Alta demanda hoy",
-    "🌸 Productos frescos disponibles",
-    "🚀 Entregas el mismo día",
-    "💎 Arreglos premium disponibles",
-    "🎁 Ofertas activas ahora"
+"🔥 Alta demanda hoy – asegura tu pedido a tiempo",
+"🌸 Flores frescas de alta calidad disponibles",
+"🚀 Entregas rápidas el mismo día garantizadas",
+"💎 Arreglos premium exclusivos para cada ocasión",
+"🎁 Ofertas especiales activas por tiempo limitado",
+"❤️ Sorprende con detalles únicos e inolvidables",
+"🌷 Diseños florales elegantes y personalizados",
+"✨ Calidad y frescura que marcan la diferencia",
+"📦 Pedidos fáciles, rápidos y seguros",
+"🌹 El regalo perfecto para cualquier momento especial",
+"⏰ Agenda tu entrega en el horario que prefieras",
+"💐 Atención personalizada para cada cliente",
+"🎉 Promociones exclusivas solo por hoy",
+"🌼 Variedad de estilos para todos los gustos"
   ];
 
   info.textContent = demandMessages[Math.floor(Math.random()*demandMessages.length)];
@@ -761,19 +770,31 @@ function smartBarSystem(){
   // PRUEBA SOCIAL
   // =========================
 
-  const names = ["Ana","Carlos","María","Luis","Sofía","Pedro"];
-  const zones = ["Santo Domingo","Santiago","La Vega","San Cristóbal"];
+ const names = [
+  "Ana","Carlos","María","Luis","Sofía","Pedro",
+  "José","Laura","Miguel","Carmen","Andrés","Valeria",
+  "Juan","Camila","Daniel","Paula","Roberto","Elena",
+  "Fernando","Lucía","Jorge","Natalia","Ricardo","Patricia",
+  "Diego","Adriana","Manuel","Gabriela","Francisco","Isabel"
+];
+
+const zones = [
+  "Santo Domingo","Distrito Nacional","La Vega","San Cristóbal",
+  "Distrito Nacional","San Pedro de Macorís","Higüey","Bonao",
+  "Distrito Nacional","Barahona","Distrito Nacional","Baní",
+  "Monte Plata","Distrito Nacional","Jarabacoa","Constanza"
+];
 
   const name = names[Math.floor(Math.random()*names.length)];
   const zone = zones[Math.floor(Math.random()*zones.length)];
 
-  proof.textContent = `🛍️ ${name} compró hace ${Math.floor(Math.random()*5)+1} min (${zone})`;
+  proof.textContent = `🛍️ ${name} Hizo su pedido hace ${Math.floor(Math.random()*5)+1} min (${zone})`;
 
 }
 
 // ACTUALIZA CADA 6 SEGUNDOS
 smartBarSystem();
-setInterval(smartBarSystem, 6000);
+setInterval(smartBarSystem, 7000);
 
 // ======================================
 // SISTEMA PROFESIONAL DE PLANES
