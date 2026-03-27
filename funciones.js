@@ -155,12 +155,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const card = addBtn.closest(".product-card");
 
     const product = {
-      id: card.dataset.id,
-      name: card.dataset.name,
-      price: parseFloat(card.dataset.price),
-      image: card.querySelector("img").src,
-      qty: parseInt(card.querySelector("input")?.value) || 1
-    };
+  id: card.dataset.id,
+  name: card.dataset.name,
+  price: parseFloat(card.dataset.price),
+  image: card.querySelector("img").src,
+  desc: card.querySelectorAll(".product-desc")[1]?.textContent || "",
+  qty: parseInt(card.querySelector("input")?.value) || 1
+   };
 
     const existing = store.cart.find(p => p.id === product.id);
 
@@ -286,6 +287,7 @@ checkoutForm?.addEventListener("submit", (e) => {
   const telefono = document.getElementById("customerPhone").value.trim();
   const correo = document.getElementById("customerEmail").value.trim();
   const direccion = document.getElementById("customerAddress").value.trim();
+  
 
   if (!nombre || !telefono || !direccion) {
     showToast("Completa todos los campos obligatorios");
@@ -323,7 +325,7 @@ store.cart.forEach(item => {
   const subtotal = item.price * item.qty;
   total += subtotal;
 
-  productosTexto += `• ${item.name} x${item.qty} = RD$ ${subtotal.toFixed(2)}\n`;
+  productosTexto += `• ${item.name}\n${item.desc}\nx${item.qty} = RD$ ${subtotal.toFixed(2)}\n\n`;
 });
 
   // ============================
@@ -345,6 +347,8 @@ const mensaje =
 
 "🛒 *Productos:*\n" +
 productosTexto + "\n" +
+
+
 
 "💰 *Total: RD$ " + total.toFixed(2) + "*\n\n" +
 
