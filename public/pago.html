@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pago Seguro — Katty Floristería</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Stripe JS -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <!-- PayPal SDK — se carga dinámicamente con el Client ID correcto -->
+  <script src="config.js"></script>
+  <style>
+    :root {
+      --primary: #c2185b;
+      --primary-light: #ff4081;
+      --dark: #0f0f14;
+      --dark-2: #1a1a22;
+      --dark-3: #242430;
+      --white: #fff;
+      --gray: #b0b0c3;
+      --border: rgba(255,255,255,.08);
+      --success: #4caf50;
+      --warning: #ff9800;
+      --danger: #f44336;
+      --radius: 14px;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body { min-height:100%; background:var(--dark); color:var(--white); font-family:'Poppins',sans-serif; -webkit-font-smoothing:antialiased; }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    .pay-header {
+      background:var(--dark-2); border-bottom:1px solid var(--border);
+      padding:16px 24px; display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:100;
+    }
+    .pay-header .logo { font-size:1.1rem; font-weight:700; color:var(--primary-light); text-decoration:none; }
+    .pay-header .secure-badge {
+      display:flex; align-items:center; gap:6px;
+      font-size:.75rem; color:#4caf50; background:rgba(76,175,80,.1);
+      border:1px solid rgba(76,175,80,.3); border-radius:20px; padding:5px 12px;
+    }
+
+    /* ── LAYOUT ─────────────────────────────────────────── */
+    .pay-layout {
+      max-width:960px; margin:0 auto; padding:32px 16px 64px;
+      display:grid; grid-template-columns:1fr 380px; gap:28px;
+    }
+    @media(max-width:768px) { .pay-layout { grid-template-columns:1fr; } }
+
+    /* ── CARDS ──────────────────────────────────────────── */
+    .pay-card {
+      background:var(--dark-2); border:1px solid var(--border);
+      border-radius:var(--radius); padding:28px; margin-bottom:20px;
+    }
+    .pay-card h2 {
+      font-size:1rem; font-weight:600; margin-bottom:20px;
+      display:flex; align-items:center; gap:8px; color:#fff;
+    }
+    .pay-card h2 i { color:var(--primary-light); }
+
+    /* ── FORM FIELDS ────────────────────────────────────── */
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .form-row.full { grid-template-columns:1fr; }
+    .field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .field label { font-size:.72rem; color:#888; letter-spacing:.8px; text-transform:uppercase; }
+    .field input, .field select, .field textarea {
+      background:rgba(255,255,255,.04); border:1px solid var(--border);
+      border-radius:10px; padding:13px 16px; color:#fff; font-size:.88rem;
+      font-family:inherit; outline:none; transition:border-color .2s; width:100%;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(255,64,129,.1); }
+    .field input::placeholder, .field textarea::placeholder { color:#555; }
+    .field textarea { resize:none; min-height:70px; }
+    .field select option { background:var(--dark-2); }
+    @media(max-width:480px) { .form-row { grid-template-columns:1fr; } }
+
+    /* ── MÉTODO DE PAGO TABS ────────────────────────────── */
+    .payment-tabs {
+      display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:24px;
+    }
+    .payment-tab {
+      padding:14px 10px; border-radius:10px; border:2px solid var(--border);
+      background:rgba(255,255,255,.02); cursor:pointer; text-align:center;
+      transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:5px;
+    }
+    .payment-tab:hover { border-color:rgba(194,24,91,.3); }
+    .payment-tab.active { border-color:var(--primary-light); background:rgba(194,24,91,.08); }
+    .payment-tab .tab-icon { font-size:1.6rem; line-height:1; }
+    .payment-tab .tab-label { font-size:.72rem; font-weight:600; color:#aaa; letter-spacing:.3px; }
+    .payment-tab.active .tab-label { color:var(--primary-light); }
+
+    /* ── STRIPE CARD ELEMENT ────────────────────────────── */
+    .stripe-panel, .paypal-panel, .whatsapp-panel { display:none; }
+    .stripe-panel.active, .paypal-panel.active, .whatsapp-panel.active { display:block; }
+
+    #stripe-card-element {
+      background:rgba(255,255,255,.04); border:1px solid var(--border);
+      border-radius:10px; padding:15px 16px; transition:border-color .2s;
+    }
+    #stripe-card-element.StripeElement--focus { border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(255,64,129,.1); }
+    #stripe-card-errors { color:var(--danger); font-size:.78rem; margin-top:8px; min-height:20px; }
+    .card-brands { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+    .card-brand { height:24px; border-radius:4px; opacity:.7; background:#fff; padding:2px 6px; display:flex; align-items:center; font-size:.7rem; font-weight:700; color:#333; }
+
+    /* ── PAYPAL BUTTON ──────────────────────────────────── */
+    #paypal-button-container { min-height:48px; }
+    .paypal-info { font-size:.78rem; color:#888; text-align:center; margin-top:10px; }
+
+    /* ── WHATSAPP PAGO ──────────────────────────────────── */
+    .wa-pay-info { background:rgba(37,211,102,.07); border:1px solid rgba(37,211,102,.2); border-radius:10px; padding:16px; }
+    .wa-pay-info p { font-size:.83rem; color:#ccc; line-height:1.6; margin-bottom:8px; }
+    .wa-pay-info p:last-child { margin:0; }
+    .wa-pay-info strong { color:#4caf50; }
+    .bank-list { margin-top:12px; display:flex; flex-direction:column; gap:6px; }
+    .bank-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,.03); border-radius:8px; border:1px solid var(--border); font-size:.8rem; }
+    .bank-icon { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+
+    /* ── PAY BUTTON ─────────────────────────────────────── */
+    .pay-btn {
+      width:100%; padding:16px; border-radius:40px;
+      background:linear-gradient(135deg, var(--primary), var(--primary-light));
+      border:none; color:#fff; font-size:1rem; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:all .3s;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      box-shadow:0 6px 20px rgba(194,24,91,.35); margin-top:20px;
+    }
+    .pay-btn:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(194,24,91,.5); }
+    .pay-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .pay-btn .spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none; }
+    .pay-btn.loading .btn-text { display:none; }
+    .pay-btn.loading .spinner { display:block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── RESUMEN PEDIDO ─────────────────────────────────── */
+    .order-summary { position:sticky; top:80px; }
+    .order-item { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); gap:10px; }
+    .order-item:last-child { border:none; }
+    .order-item-name { font-size:.85rem; color:#ddd; flex:1; }
+    .order-item-qty { font-size:.75rem; color:#888; margin-top:2px; }
+    .order-item-price { font-size:.9rem; font-weight:600; color:var(--primary-light); white-space:nowrap; }
+    .order-divider { border:none; border-top:1px solid var(--border); margin:16px 0; }
+    .order-total-row { display:flex; justify-content:space-between; align-items:center; }
+    .order-total-label { font-size:.85rem; color:#888; }
+    .order-total-amount { font-size:1.3rem; font-weight:700; color:#fff; }
+    .order-usd { font-size:.72rem; color:#888; text-align:right; margin-top:4px; }
+
+    .security-badges { display:flex; flex-direction:column; gap:8px; margin-top:20px; }
+    .security-badge { display:flex; align-items:center; gap:8px; font-size:.75rem; color:#666; }
+    .security-badge i { color:#4caf50; font-size:.9rem; width:16px; }
+
+    /* ── SUCCESS SCREEN ─────────────────────────────────── */
+    .success-screen {
+      display:none; text-align:center; padding:48px 20px;
+    }
+    .success-screen.visible { display:block; }
+    .success-icon { font-size:64px; margin-bottom:20px; animation:popIn .5s ease; }
+    @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
+    .success-screen h2 { font-size:1.6rem; margin-bottom:12px; color:#fff; }
+    .success-screen p { color:#888; font-size:.9rem; margin-bottom:8px; }
+
+    .tracking-box {
+      background:rgba(194,24,91,.08); border:1px solid rgba(194,24,91,.25);
+      border-radius:var(--radius); padding:24px; margin:24px auto; max-width:420px;
+    }
+    .tracking-code-display {
+      font-size:1.5rem; font-weight:700; letter-spacing:3px;
+      color:var(--primary-light); margin:8px 0;
+      background:rgba(194,24,91,.12); padding:12px 20px; border-radius:8px; display:inline-block;
+    }
+    .copy-btn {
+      background:rgba(255,255,255,.06); border:1px solid var(--border);
+      color:#aaa; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:.75rem;
+      font-family:inherit; transition:.2s; margin-top:8px;
+    }
+    .copy-btn:hover { background:rgba(255,255,255,.1); color:#fff; }
+
+    .action-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:24px; }
+    .btn-outline-pay {
+      padding:12px 24px; border-radius:40px; border:2px solid rgba(194,24,91,.4);
+      color:var(--primary-light); background:transparent; cursor:pointer;
+      font-family:inherit; font-size:.85rem; font-weight:600; transition:.2s; text-decoration:none;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn-outline-pay:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .btn-primary-pay {
+      padding:12px 24px; border-radius:40px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      border:none; color:#fff; cursor:pointer; font-family:inherit;
+      font-size:.85rem; font-weight:600; transition:.2s; text-decoration:none;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn-primary-pay:hover { opacity:.9; transform:translateY(-1px); }
+
+    /* ── TOAST ──────────────────────────────────────────── */
+    .toast-cont { position:fixed; top:16px; right:16px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+    .toast-msg { background:var(--dark-2); border:1px solid rgba(194,24,91,.3); border-left:3px solid var(--primary-light); border-radius:8px; padding:12px 16px; font-size:.82rem; display:flex; align-items:center; gap:8px; animation:slideIn .25s; max-width:300px; }
+    .toast-msg.ok { border-left-color:var(--success); }
+    .toast-msg.ok i { color:var(--success); }
+    .toast-msg i { color:var(--primary-light); }
+    @keyframes slideIn { from{transform:translateX(60px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* ── PROGRESS STEPS ─────────────────────────────────── */
+    .checkout-steps { display:flex; justify-content:center; align-items:center; gap:0; margin-bottom:28px; }
+    .cs { display:flex; align-items:center; gap:8px; }
+    .cs-dot { width:28px; height:28px; border-radius:50%; border:2px solid var(--border); background:var(--dark-3); display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:700; color:#666; flex-shrink:0; }
+    .cs.active .cs-dot { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .cs.done .cs-dot { background:var(--success); border-color:var(--success); color:#fff; }
+    .cs-label { font-size:.72rem; color:#666; white-space:nowrap; }
+    .cs.active .cs-label { color:#fff; }
+    .cs.done .cs-label { color:var(--success); }
+    .cs-line { flex:1; height:2px; background:var(--border); max-width:40px; }
+    .cs-line.done { background:var(--success); }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast-cont" id="toastCont"></div>
+
+<!-- HEADER -->
+<header class="pay-header">
+  <a href="index.html" class="logo">🌸 Katty Floristería</a>
+  <div class="secure-badge"><i class="fas fa-lock"></i> Pago 100% Seguro</div>
+</header>
+
+<!-- PROGRESS STEPS -->
+<div style="background:var(--dark-2);border-bottom:1px solid var(--border);padding:16px 24px;">
+  <div class="checkout-steps">
+    <div class="cs done">
+      <div class="cs-dot"><i class="fas fa-check" style="font-size:10px;"></i></div>
+      <span class="cs-label">Carrito</span>
+    </div>
+    <div class="cs-line done"></div>
+    <div class="cs done">
+      <div class="cs-dot"><i class="fas fa-check" style="font-size:10px;"></i></div>
+      <span class="cs-label">Datos</span>
+    </div>
+    <div class="cs-line done"></div>
+    <div class="cs active">
+      <div class="cs-dot">3</div>
+      <span class="cs-label">Pago</span>
+    </div>
+    <div class="cs-line"></div>
+    <div class="cs">
+      <div class="cs-dot">4</div>
+      <span class="cs-label">Confirmación</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="pay-layout" id="payLayout">
+
+  <!-- ── COLUMNA IZQUIERDA ─────────────────────────────── -->
+  <div>
+
+    <!-- Pantalla de éxito (oculta hasta completar pago) -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">🌸</div>
+      <h2>¡Pedido Confirmado!</h2>
+      <p>Tu pago fue procesado exitosamente.</p>
+      <p>Te enviaremos una notificación cuando tu arreglo esté listo.</p>
+
+      <div class="tracking-box">
+        <p style="font-size:.8rem;color:#888;margin-bottom:6px;">📦 Tu código de seguimiento</p>
+        <div class="tracking-code-display" id="successTrackingCode">KF-2025-XXXXXX</div>
+        <br>
+        <button class="copy-btn" onclick="copyTracking()">
+          <i class="fas fa-copy"></i> Copiar código
+        </button>
+        <p style="font-size:.75rem;color:#666;margin-top:12px;">
+          Guarda este código para rastrear tu pedido en tiempo real
+        </p>
+      </div>
+
+      <div class="action-btns">
+        <a href="seguimiento.html" class="btn-primary-pay" id="trackOrderBtn">
+          <i class="fas fa-truck"></i> Rastrear mi pedido
+        </a>
+        <a href="index.html" class="btn-outline-pay">
+          <i class="fas fa-home"></i> Volver a la tienda
+        </a>
+      </div>
+    </div>
+
+    <!-- Formulario de pago (visible hasta completar) -->
+    <div id="payForm">
+
+      <!-- DATOS DEL CLIENTE -->
+      <div class="pay-card">
+        <h2><i class="fas fa-user"></i> Información de Entrega</h2>
+        <div class="form-row">
+          <div class="field">
+            <label>Nombre completo *</label>
+            <input type="text" id="custName" placeholder="Ej: María García" required>
+          </div>
+          <div class="field">
+            <label>Teléfono *</label>
+            <input type="tel" id="custPhone" placeholder="+1 809-000-0000" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Correo electrónico *</label>
+          <input type="email" id="custEmail" placeholder="tu@email.com" required>
+        </div>
+        <div class="field">
+          <label>Dirección de entrega *</label>
+          <textarea id="custAddress" placeholder="Calle, número, sector, ciudad, provincia..." required></textarea>
+        </div>
+        <div class="field">
+          <label>Nota especial (opcional)</label>
+          <input type="text" id="custNote" placeholder="Ej: Entregar en horario de tarde">
+        </div>
+      </div>
+
+      <!-- MÉTODO DE PAGO -->
+      <div class="pay-card">
+        <h2><i class="fas fa-credit-card"></i> Método de Pago</h2>
+
+        <div class="payment-tabs">
+          <div class="payment-tab active" onclick="selectPayMethod('stripe',this)" id="tab-stripe">
+            <span class="tab-icon">💳</span>
+            <span class="tab-label">Tarjeta</span>
+          </div>
+          <div class="payment-tab" onclick="selectPayMethod('paypal',this)" id="tab-paypal">
+            <span class="tab-icon">🅿️</span>
+            <span class="tab-label">PayPal</span>
+          </div>
+          <div class="payment-tab" onclick="selectPayMethod('whatsapp',this)" id="tab-whatsapp">
+            <span class="tab-icon">📱</span>
+            <span class="tab-label">Transferencia</span>
+          </div>
+        </div>
+
+        <!-- STRIPE PANEL -->
+        <div class="stripe-panel active" id="panel-stripe">
+          <div class="card-brands">
+            <div class="card-brand" style="background:#1A1F71;color:#fff;">VISA</div>
+            <div class="card-brand" style="background:#EB001B;color:#fff;">MC</div>
+            <div class="card-brand" style="background:#003087;color:#fff;">AMEX</div>
+            <div class="card-brand" style="background:#FF5F00;color:#fff;">Discover</div>
+          </div>
+          <div class="field">
+            <label>Número de tarjeta</label>
+            <div id="stripe-card-element"></div>
+            <div id="stripe-card-errors"></div>
+          </div>
+          <p style="font-size:.72rem;color:#555;margin-top:8px;">
+            <i class="fas fa-lock" style="color:#4caf50;"></i>
+            Encriptado con SSL 256-bit. Tu información está 100% segura.
+          </p>
+        </div>
+
+        <!-- PAYPAL PANEL -->
+        <div class="paypal-panel" id="panel-paypal">
+          <div style="background:rgba(0,48,135,.1);border:1px solid rgba(0,48,135,.2);border-radius:10px;padding:16px;margin-bottom:16px;">
+            <p style="font-size:.83rem;color:#aaa;margin-bottom:12px;">
+              Al hacer clic en el botón de PayPal serás redirigido para completar tu pago de forma segura.
+            </p>
+            <div id="paypal-button-container"></div>
+          </div>
+          <p class="paypal-info">
+            <i class="fab fa-paypal" style="color:#003087;"></i>
+            Paga con tu cuenta PayPal o tarjeta vinculada. Disponible en 200+ países.
+          </p>
+        </div>
+
+        <!-- TRANSFERENCIA / WHATSAPP PANEL -->
+        <div class="whatsapp-panel" id="panel-whatsapp">
+          <div class="wa-pay-info">
+            <p>Realiza tu transferencia a cualquiera de estas cuentas y envía el comprobante por WhatsApp:</p>
+            <div class="bank-list">
+              <div class="bank-item">
+                <div class="bank-icon" style="background:#c8102e;">🏦</div>
+                <div>
+                  <div style="font-weight:600;color:#fff;">Banco Popular</div>
+                  <div style="color:#888;font-size:.75rem;">Cta. de Ahorros: 8XX-XXXXXX-X</div>
+                  <div style="color:#888;font-size:.75rem;">A nombre de: Katty Martinez</div>
+                </div>
+              </div>
+              <div class="bank-item">
+                <div class="bank-icon" style="background:#006b35;">🏦</div>
+                <div>
+                  <div style="font-weight:600;color:#fff;">Banreservas</div>
+                  <div style="color:#888;font-size:.75rem;">Cta. de Ahorros: 9XX-XXXXXX-X</div>
+                  <div style="color:#888;font-size:.75rem;">A nombre de: Katty Martinez</div>
+                </div>
+              </div>
+              <div class="bank-item">
+                <div class="bank-icon" style="background:#00275d;">🏦</div>
+                <div>
+                  <div style="font-weight:600;color:#fff;">BHD León</div>
+                  <div style="color:#888;font-size:.75rem;">Cta. Corriente: 2XX-XXX-XXXX</div>
+                  <div style="color:#888;font-size:.75rem;">A nombre de: Katty Martinez</div>
+                </div>
+              </div>
+            </div>
+            <p style="margin-top:12px;font-size:.78rem;">
+              <strong>📱 Envía tu comprobante a:</strong>
+              <a href="https://wa.me/18294317622" target="_blank" style="color:#4caf50;"> +1 829-431-7622</a>
+            </p>
+            <p style="font-size:.75rem;color:#888;margin-top:6px;">
+              ⏱️ Tu pedido se procesará en máximo 2 horas hábiles después de confirmar el pago.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOTÓN PAGAR -->
+      <button class="pay-btn" id="payBtn" onclick="processPayment()">
+        <span class="btn-text"><i class="fas fa-lock"></i> Confirmar y Pagar</span>
+        <div class="spinner"></div>
+      </button>
+
+      <p style="text-align:center;font-size:.72rem;color:#555;margin-top:12px;">
+        Al confirmar aceptas nuestros <a href="#" style="color:var(--primary-light);">términos y condiciones</a>.
+      </p>
+
+    </div><!-- /payForm -->
+
+  </div><!-- /left column -->
+
+  <!-- ── COLUMNA DERECHA: RESUMEN ──────────────────────── -->
+  <div class="order-summary">
+    <div class="pay-card">
+      <h2><i class="fas fa-shopping-bag"></i> Tu Pedido</h2>
+      <div id="orderItemsList"></div>
+      <hr class="order-divider">
+      <div class="order-total-row" style="margin-bottom:6px;">
+        <span class="order-total-label">Subtotal</span>
+        <span style="font-size:.9rem;color:#ddd;" id="summarySubtotal">RD$ 0</span>
+      </div>
+      <div class="order-total-row" style="margin-bottom:6px;">
+        <span class="order-total-label">Envío</span>
+        <span style="font-size:.85rem;color:#4caf50;">Incluido 🚚</span>
+      </div>
+      <hr class="order-divider">
+      <div class="order-total-row">
+        <span class="order-total-label" style="font-size:1rem;font-weight:600;color:#fff;">Total</span>
+        <div style="text-align:right;">
+          <div class="order-total-amount" id="summaryTotal">RD$ 0</div>
+          <div class="order-usd" id="summaryUSD">≈ USD $0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badges seguridad -->
+    <div class="security-badges" style="padding:0 4px;">
+      <div class="security-badge"><i class="fas fa-lock"></i> Pago cifrado SSL 256-bit</div>
+      <div class="security-badge"><i class="fas fa-shield-alt"></i> Datos protegidos</div>
+      <div class="security-badge"><i class="fas fa-undo"></i> Garantía de satisfacción</div>
+      <div class="security-badge"><i class="fab fa-cc-stripe"></i> Procesado por Stripe / PayPal</div>
+    </div>
+  </div>
+
+</div><!-- /pay-layout -->
+
+<script>
+/* =============================================================
+   KATTY FLORISTERÍA — pago.js (inline)
+   Maneja Stripe, PayPal y transferencia bancaria
+   ============================================================= */
+
+const API = (typeof KF_CONFIG !== 'undefined') ? KF_CONFIG.API_URL : 'http://localhost:3000';
+const WA  = '18294317622';
+const DOP_TO_USD = 0.017; // Tasa aproximada RD$ → USD (actualizar según mercado)
+
+let currentCart    = [];
+let currentTotal   = 0;
+let selectedMethod = 'stripe';
+let stripeInstance = null;
+let cardElement    = null;
+let createdOrderId = null;
+let trackingCode   = null;
+
+/* ── Cargar carrito desde localStorage ─────────────────── */
+function loadCartSummary() {
+  try {
+    currentCart = JSON.parse(localStorage.getItem('kf_cart') || '[]');
+  } catch(e) { currentCart = []; }
+
+  if (!currentCart.length) {
+    // Redirigir si el carrito está vacío
+    document.getElementById('orderItemsList').innerHTML =
+      '<p style="color:#888;font-size:.83rem;">Carrito vacío. <a href="index.html" style="color:var(--primary-light)">Volver a la tienda</a></p>';
+    document.getElementById('payBtn').disabled = true;
+    return;
+  }
+
+  const list = document.getElementById('orderItemsList');
+  let total = 0;
+  list.innerHTML = currentCart.map(item => {
+    const sub = item.price * item.qty;
+    total += sub;
+    return `
+      <div class="order-item">
+        <div>
+          <div class="order-item-name">${item.name}</div>
+          <div class="order-item-qty">× ${item.qty}</div>
+        </div>
+        <div class="order-item-price">RD$ ${sub.toLocaleString('es-DO')}</div>
+      </div>`;
+  }).join('');
+
+  currentTotal = total;
+  const usd = (total * DOP_TO_USD).toFixed(2);
+  document.getElementById('summarySubtotal').textContent = 'RD$ ' + total.toLocaleString('es-DO');
+  document.getElementById('summaryTotal').textContent    = 'RD$ ' + total.toLocaleString('es-DO');
+  document.getElementById('summaryUSD').textContent      = `≈ USD $${usd}`;
+}
+
+/* ── Inicializar Stripe ─────────────────────────────────── */
+async function initStripe() {
+  try {
+    // Obtener publishable key del backend (o usar la del config)
+    const pk = window.STRIPE_PK || '';
+    if (!pk) {
+      // Si no hay Stripe configurado, deshabilitar tab
+      document.getElementById('tab-stripe').style.opacity = '.4';
+      document.getElementById('tab-stripe').title = 'No configurado';
+      return;
+    }
+    stripeInstance = Stripe(pk);
+    const elements = stripeInstance.elements({
+      appearance: {
+        theme: 'night',
+        variables: { colorPrimary: '#ff4081', colorBackground: '#1a1a22', colorText: '#ffffff', borderRadius: '10px' }
+      }
+    });
+    cardElement = elements.create('card', { hidePostalCode: true });
+    cardElement.mount('#stripe-card-element');
+    cardElement.on('change', e => {
+      document.getElementById('stripe-card-errors').textContent = e.error ? e.error.message : '';
+    });
+  } catch(e) {
+    console.warn('Stripe init error:', e.message);
+  }
+}
+
+/* ── Inicializar PayPal ─────────────────────────────────── */
+function initPayPal() {
+  if (!window.paypal) return;
+  try {
+    paypal.Buttons({
+      style: { layout: 'vertical', color: 'blue', shape: 'pill', label: 'pay' },
+      createOrder: async (data, actions) => {
+        const usd = (currentTotal * DOP_TO_USD).toFixed(2);
+        return actions.order.create({
+          purchase_units: [{
+            description: 'Katty Floristería — Arreglos florales',
+            amount: { currency_code: 'USD', value: usd }
+          }]
+        });
+      },
+      onApprove: async (data, actions) => {
+        const details = await actions.order.capture();
+        setPayBtn(true);
+        // Crear pedido en backend con pago PayPal
+        const orderId = await createOrder('paypal', details.id);
+        // Verificar en backend
+        try {
+          await fetch(`${API}/api/paypal/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderID: details.id, orderId })
+          });
+        } catch(e) {}
+        showSuccess(orderId);
+        setPayBtn(false);
+      },
+      onError: err => {
+        showToast('❌ Error en PayPal: ' + err, 'err');
+      }
+    }).render('#paypal-button-container');
+  } catch(e) {
+    console.warn('PayPal init error:', e);
+  }
+}
+
+/* ── Seleccionar método de pago ─────────────────────────── */
+function selectPayMethod(method, el) {
+  selectedMethod = method;
+  document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.stripe-panel,.paypal-panel,.whatsapp-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${method}`).classList.add('active');
+
+  const btn = document.getElementById('payBtn');
+  if (method === 'paypal') {
+    btn.style.display = 'none'; // PayPal tiene su propio botón
+    initPayPal();
+  } else if (method === 'whatsapp') {
+    btn.style.display = 'flex';
+    btn.querySelector('.btn-text').innerHTML = '<i class="fab fa-whatsapp"></i> Confirmar y enviar comprobante';
+  } else {
+    btn.style.display = 'flex';
+    btn.querySelector('.btn-text').innerHTML = '<i class="fas fa-lock"></i> Confirmar y Pagar';
+  }
+}
+
+/* ── Validar datos del cliente ──────────────────────────── */
+function validateCustomer() {
+  const name    = document.getElementById('custName').value.trim();
+  const phone   = document.getElementById('custPhone').value.trim();
+  const email   = document.getElementById('custEmail').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  if (!name)    { showToast('⚠️ Ingresa tu nombre'); document.getElementById('custName').focus(); return false; }
+  if (!phone)   { showToast('⚠️ Ingresa tu teléfono'); document.getElementById('custPhone').focus(); return false; }
+  if (!email || !email.includes('@')) { showToast('⚠️ Email inválido'); document.getElementById('custEmail').focus(); return false; }
+  if (!address) { showToast('⚠️ Ingresa tu dirección'); document.getElementById('custAddress').focus(); return false; }
+  return { name, phone, email, address, note: document.getElementById('custNote').value.trim() };
+}
+
+/* ── Crear pedido en el backend ─────────────────────────── */
+async function createOrder(paymentMethod, paymentId = null) {
+  const customer = validateCustomer();
+  if (!customer) return null;
+
+  const orderPayload = {
+    customer_name:    customer.name,
+    customer_phone:   customer.phone,
+    customer_email:   customer.email,
+    customer_address: customer.address,
+    customer_note:    customer.note,
+    items_json:       currentCart,
+    total:            currentTotal,
+    payment_method:   paymentMethod,
+    payment_status:   paymentId ? 'paid' : 'pending',
+    payment_id:       paymentId || null,
+    status:           'confirmed',
+    date:             new Date().toLocaleString('es-DO'),
+    created_at:       new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(`${API}/api/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderPayload),
+      signal: AbortSignal.timeout(10000)
+    });
+    const data = await res.json();
+    if (data.success && data.order) {
+      createdOrderId = data.order.id;
+      trackingCode   = data.order.tracking_code;
+      return data.order.id;
+    }
+  } catch(e) {
+    console.warn('Backend unavailable, saving locally:', e.message);
+  }
+
+  // Fallback: guardar localmente
+  trackingCode = 'KF-' + new Date().getFullYear() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
+  const local  = JSON.parse(localStorage.getItem('kf_orders') || '[]');
+  const localOrder = { ...orderPayload, tracking_code: trackingCode, id: 'local-' + Date.now() };
+  local.push(localOrder);
+  localStorage.setItem('kf_orders', JSON.stringify(local));
+  createdOrderId = localOrder.id;
+  return localOrder.id;
+}
+
+/* ── Procesar pago principal ────────────────────────────── */
+async function processPayment() {
+  const customer = validateCustomer();
+  if (!customer) return;
+  if (!currentCart.length) { showToast('⚠️ Tu carrito está vacío'); return; }
+
+  setPayBtn(true);
+
+  try {
+    if (selectedMethod === 'stripe') {
+      await processStripe(customer);
+    } else if (selectedMethod === 'whatsapp') {
+      await processWhatsApp(customer);
+    }
+  } catch(e) {
+    showToast('❌ ' + e.message, 'err');
+    setPayBtn(false);
+  }
+}
+
+/* ── Pago con Stripe ────────────────────────────────────── */
+async function processStripe(customer) {
+  if (!stripeInstance || !cardElement) {
+    showToast('⚠️ Stripe no está configurado. Usa otro método de pago.');
+    setPayBtn(false);
+    return;
+  }
+
+  const usdAmount = parseFloat((currentTotal * DOP_TO_USD).toFixed(2));
+
+  // 1. Crear pedido en backend
+  const orderId = await createOrder('stripe');
+  if (!orderId) { setPayBtn(false); return; }
+
+  // 2. Crear PaymentIntent
+  try {
+    const piRes = await fetch(`${API}/api/stripe/create-payment-intent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: usdAmount,
+        currency: 'usd',
+        orderId,
+        customerEmail: customer.email,
+        metadata: { store: 'Katty Floristería', tracking: trackingCode }
+      })
+    });
+    const piData = await piRes.json();
+    if (!piData.clientSecret) throw new Error(piData.error || 'Error al iniciar el pago');
+
+    // 3. Confirmar pago con Stripe
+    const { error: stripeErr } = await stripeInstance.confirmCardPayment(piData.clientSecret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: { name: customer.name, email: customer.email }
+      }
+    });
+
+    if (stripeErr) {
+      document.getElementById('stripe-card-errors').textContent = stripeErr.message;
+      throw new Error(stripeErr.message);
+    }
+
+    // 4. ¡Éxito!
+    showSuccess(orderId);
+
+  } catch(e) {
+    setPayBtn(false);
+    throw e;
+  }
+}
+
+/* ── Pago por transferencia / WhatsApp ──────────────────── */
+async function processWhatsApp(customer) {
+  const orderId = await createOrder('transfer');
+  if (!orderId) { setPayBtn(false); return; }
+
+  let msg = `🌸 *Pedido Katty Floristería*\n\n`;
+  msg += `📦 *Código:* ${trackingCode}\n`;
+  msg += `👤 *Cliente:* ${customer.name}\n`;
+  msg += `📞 *Teléfono:* ${customer.phone}\n`;
+  msg += `✉️ *Email:* ${customer.email}\n`;
+  msg += `📍 *Dirección:* ${customer.address}\n`;
+  if (customer.note) msg += `📝 *Nota:* ${customer.note}\n`;
+  msg += `\n*🛒 Productos:*\n`;
+  currentCart.forEach(i => {
+    msg += `• ${i.name} × ${i.qty} = RD$ ${(i.price*i.qty).toLocaleString('es-DO')}\n`;
+  });
+  msg += `\n💰 *Total: RD$ ${currentTotal.toLocaleString('es-DO')}*\n`;
+  msg += `\n_Adjunta el comprobante de transferencia a este mensaje para confirmar tu pedido. ¡Gracias! 🌸_`;
+
+  window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, '_blank');
+  showSuccess(orderId);
+}
+
+/* ── Mostrar pantalla de éxito ──────────────────────────── */
+function showSuccess(orderId) {
+  // Limpiar carrito
+  localStorage.removeItem('kf_cart');
+
+  // Actualizar paso de progress
+  document.querySelectorAll('.cs')[3].classList.add('active');
+  document.querySelectorAll('.cs-line')[2]?.classList.add('done');
+
+  // Mostrar código de tracking
+  const code = trackingCode || 'KF-' + Date.now();
+  document.getElementById('successTrackingCode').textContent = code;
+  document.getElementById('trackOrderBtn').href = `seguimiento.html?code=${code}`;
+
+  // Ocultar form, mostrar éxito
+  document.getElementById('payForm').style.display = 'none';
+  document.getElementById('successScreen').classList.add('visible');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setPayBtn(false);
+  showToast('✅ ¡Pedido confirmado!', 'ok');
+}
+
+/* ── Copiar código de tracking ──────────────────────────── */
+function copyTracking() {
+  const code = document.getElementById('successTrackingCode').textContent;
+  navigator.clipboard?.writeText(code).then(() => showToast('📋 Código copiado', 'ok'));
+}
+
+/* ── UI helpers ─────────────────────────────────────────── */
+function setPayBtn(loading) {
+  const btn = document.getElementById('payBtn');
+  btn.disabled = loading;
+  btn.classList.toggle('loading', loading);
+}
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastCont');
+  const t = document.createElement('div');
+  t.className = `toast-msg ${type === 'ok' ? 'ok' : ''}`;
+  t.innerHTML = `<i class="fas fa-${type==='ok'?'check-circle':'info-circle'}"></i><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='.3s'; }, 3000);
+  setTimeout(() => t.remove(), 3400);
+}
+
+/* ── INIT ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadCartSummary();
+  initStripe();
+  // PayPal se inicializa cuando se selecciona el tab
+});
+</script>
+</body>
+</html>

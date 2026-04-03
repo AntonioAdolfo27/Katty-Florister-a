@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguimiento de Pedido — Katty Floristería</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    :root {
+      --primary:#c2185b; --primary-light:#ff4081;
+      --dark:#0f0f14; --dark-2:#1a1a22; --dark-3:#242430;
+      --white:#fff; --gray:#b0b0c3; --border:rgba(255,255,255,.08);
+      --success:#4caf50; --warning:#ff9800; --danger:#f44336;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html,body { min-height:100%; background:var(--dark); color:var(--white); font-family:'Poppins',sans-serif; -webkit-font-smoothing:antialiased; }
+
+    /* HEADER */
+    .track-header { background:var(--dark-2); border-bottom:1px solid var(--border); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .track-header .logo { font-size:1.1rem; font-weight:700; color:var(--primary-light); text-decoration:none; }
+    .back-btn { display:flex; align-items:center; gap:6px; color:#888; font-size:.82rem; text-decoration:none; transition:.2s; }
+    .back-btn:hover { color:#fff; }
+
+    /* MAIN */
+    .track-main { max-width:720px; margin:0 auto; padding:32px 16px 64px; }
+
+    /* SEARCH BOX */
+    .search-card { background:var(--dark-2); border:1px solid var(--border); border-radius:16px; padding:28px; margin-bottom:28px; }
+    .search-card h1 { font-size:1.4rem; margin-bottom:6px; }
+    .search-card p { color:#888; font-size:.85rem; margin-bottom:20px; }
+    .search-row { display:flex; gap:10px; }
+    .search-row input {
+      flex:1; background:rgba(255,255,255,.05); border:1px solid var(--border);
+      border-radius:10px; padding:13px 18px; color:#fff; font-size:.9rem;
+      font-family:inherit; outline:none; transition:border-color .2s;
+      letter-spacing:2px; text-transform:uppercase;
+    }
+    .search-row input:focus { border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(255,64,129,.1); }
+    .search-row input::placeholder { letter-spacing:normal; text-transform:none; color:#555; }
+    .search-btn {
+      background:linear-gradient(135deg,var(--primary),var(--primary-light));
+      border:none; color:#fff; padding:13px 24px; border-radius:10px;
+      font-family:inherit; font-weight:600; font-size:.88rem; cursor:pointer; transition:.2s;
+      display:flex; align-items:center; gap:6px; white-space:nowrap;
+    }
+    .search-btn:hover { opacity:.9; }
+    .search-btn:disabled { opacity:.5; cursor:not-allowed; }
+    @media(max-width:480px) { .search-row { flex-direction:column; } }
+
+    /* LOADING */
+    .loading-spinner { text-align:center; padding:40px; display:none; }
+    .loading-spinner i { font-size:2rem; color:var(--primary-light); animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ERROR */
+    .not-found { display:none; text-align:center; padding:40px; }
+    .not-found i { font-size:3rem; color:#444; display:block; margin-bottom:16px; }
+    .not-found p { color:#888; }
+
+    /* RESULT CARD */
+    .result-card { display:none; background:var(--dark-2); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:20px; }
+    .result-card.visible { display:block; }
+
+    /* ORDER HEADER */
+    .order-header { padding:20px 24px; background:linear-gradient(135deg,rgba(194,24,91,.12),rgba(255,64,129,.06)); border-bottom:1px solid var(--border); }
+    .order-header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .order-code { font-size:1.2rem; font-weight:700; letter-spacing:2px; color:var(--primary-light); }
+    .order-date { font-size:.75rem; color:#888; margin-top:3px; }
+    .order-status-badge {
+      padding:6px 14px; border-radius:20px; font-size:.75rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:.5px; white-space:nowrap;
+    }
+    .status-confirmed  { background:rgba(33,150,243,.15); color:#64b5f6; border:1px solid rgba(33,150,243,.3); }
+    .status-preparing  { background:rgba(255,152,0,.15);  color:#ffb74d; border:1px solid rgba(255,152,0,.3);  }
+    .status-dispatched { background:rgba(156,39,176,.15); color:#ce93d8; border:1px solid rgba(156,39,176,.3); }
+    .status-delivered  { background:rgba(76,175,80,.15);  color:#81c784; border:1px solid rgba(76,175,80,.3);  }
+    .status-pending    { background:rgba(255,255,255,.05); color:#888;   border:1px solid var(--border); }
+
+    /* DELIVERY DATE */
+    .delivery-estimate { padding:16px 24px; background:rgba(76,175,80,.06); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+    .delivery-estimate i { font-size:1.4rem; color:var(--success); }
+    .delivery-estimate .del-label { font-size:.75rem; color:#888; }
+    .delivery-estimate .del-date { font-size:.95rem; font-weight:600; color:#fff; }
+
+    /* TRACKING TIMELINE */
+    .tracking-timeline { padding:24px; }
+    .tracking-timeline h3 { font-size:.88rem; font-weight:600; margin-bottom:20px; color:#888; text-transform:uppercase; letter-spacing:1px; }
+    .timeline { position:relative; }
+    .timeline-item { display:flex; gap:16px; padding-bottom:28px; position:relative; }
+    .timeline-item:last-child { padding-bottom:0; }
+    .timeline-left { display:flex; flex-direction:column; align-items:center; width:40px; flex-shrink:0; }
+    .timeline-dot {
+      width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; font-size:.9rem; flex-shrink:0; z-index:1;
+      border:2px solid var(--border); background:var(--dark-3); color:#444;
+      transition:all .4s;
+    }
+    .timeline-item.done .timeline-dot { background:var(--success); border-color:var(--success); color:#fff; }
+    .timeline-item.active .timeline-dot { background:var(--primary); border-color:var(--primary-light); color:#fff; animation:pulseDot 2s infinite; }
+    @keyframes pulseDot { 0%,100%{box-shadow:0 0 0 0 rgba(194,24,91,.5)} 50%{box-shadow:0 0 0 8px rgba(194,24,91,0)} }
+    .timeline-line { flex:1; width:2px; background:var(--border); margin-top:4px; }
+    .timeline-item.done .timeline-line { background:var(--success); }
+    .timeline-item:last-child .timeline-line { display:none; }
+
+    .timeline-content { padding-top:6px; flex:1; }
+    .timeline-content h4 { font-size:.9rem; font-weight:600; color:#888; }
+    .timeline-item.done .timeline-content h4 { color:#fff; }
+    .timeline-item.active .timeline-content h4 { color:var(--primary-light); }
+    .timeline-content .t-time { font-size:.72rem; color:#666; margin-top:3px; }
+    .timeline-item.done .t-time { color:#666; }
+    .timeline-item.active .t-time { color:#888; }
+    .timeline-content .t-desc { font-size:.78rem; color:#666; margin-top:4px; line-height:1.4; }
+    .timeline-item.done .t-desc, .timeline-item.active .t-desc { color:#888; }
+
+    /* ITEMS LIST */
+    .items-section { padding:0 24px 24px; }
+    .items-section h3 { font-size:.88rem; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
+    .order-item-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.04); font-size:.85rem; gap:10px; }
+    .order-item-row:last-child { border:none; }
+    .order-item-row .i-name { color:#ddd; flex:1; }
+    .order-item-row .i-qty { color:#888; font-size:.75rem; }
+    .order-item-row .i-price { color:var(--primary-light); font-weight:600; white-space:nowrap; }
+
+    /* PAYMENT INFO */
+    .payment-info { padding:0 24px 24px; display:flex; gap:20px; flex-wrap:wrap; }
+    .pay-chip { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:.78rem; }
+    .pay-chip i { color:var(--primary-light); }
+    .pay-chip span { color:#888; }
+    .pay-chip strong { color:#fff; }
+    .paid-chip { border-color:rgba(76,175,80,.3); background:rgba(76,175,80,.06); }
+    .paid-chip i { color:var(--success); }
+
+    /* ACTION BTNS */
+    .track-actions { display:flex; gap:10px; flex-wrap:wrap; padding:0 24px 24px; }
+    .track-btn {
+      padding:10px 18px; border-radius:8px; font-size:.8rem; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:.2s; display:flex; align-items:center; gap:6px; text-decoration:none;
+    }
+    .track-btn-wa { background:#25d366; border:none; color:#fff; }
+    .track-btn-wa:hover { background:#22c55e; }
+    .track-btn-ghost { background:rgba(255,255,255,.05); border:1px solid var(--border); color:#888; }
+    .track-btn-ghost:hover { color:#fff; background:rgba(255,255,255,.08); }
+
+    /* REFRESH BADGE */
+    .refresh-info { text-align:center; font-size:.72rem; color:#555; margin-top:16px; padding:0 24px 24px; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align:center; padding:48px 20px; }
+    .empty-state i { font-size:3rem; color:#333; display:block; margin-bottom:16px; }
+    .empty-state h2 { font-size:1.2rem; margin-bottom:8px; }
+    .empty-state p { color:#888; font-size:.85rem; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="track-header">
+  <a href="index.html" class="logo">🌸 Katty Floristería</a>
+  <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Volver a la tienda</a>
+</header>
+
+<!-- MAIN -->
+<main class="track-main">
+
+  <!-- BUSCADOR -->
+  <div class="search-card">
+    <h1>📦 Rastrear mi Pedido</h1>
+    <p>Ingresa tu código de seguimiento para ver el estado en tiempo real de tu arreglo floral.</p>
+    <div class="search-row">
+      <input type="text" id="trackInput" placeholder="Ej: KF-2025-ABC123"
+             maxlength="20" onkeydown="if(event.key==='Enter')searchOrder()">
+      <button class="search-btn" id="searchBtn" onclick="searchOrder()">
+        <i class="fas fa-search"></i> Buscar
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-spinner" id="loadingSpinner">
+    <i class="fas fa-circle-notch"></i>
+    <p style="color:#888;margin-top:12px;font-size:.83rem;">Buscando tu pedido...</p>
+  </div>
+
+  <!-- NO ENCONTRADO -->
+  <div class="not-found" id="notFound">
+    <i class="fas fa-search"></i>
+    <p>No se encontró ningún pedido con ese código.<br>
+       Verifica que el código esté escrito correctamente (Ej: KF-2025-ABC123).</p>
+    <p style="margin-top:12px;font-size:.78rem;">
+      ¿Necesitas ayuda?
+      <a href="https://wa.me/18294317622" target="_blank" style="color:var(--primary-light);">Contáctanos por WhatsApp</a>
+    </p>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="result-card" id="resultCard">
+
+    <!-- Header del pedido -->
+    <div class="order-header">
+      <div class="order-header-row">
+        <div>
+          <div class="order-code" id="r-code">KF-2025-XXXXXX</div>
+          <div class="order-date" id="r-date">Pedido realizado el —</div>
+        </div>
+        <span class="order-status-badge" id="r-status-badge">—</span>
+      </div>
+    </div>
+
+    <!-- Fecha estimada de entrega -->
+    <div class="delivery-estimate" id="deliveryEstimate">
+      <i class="fas fa-truck"></i>
+      <div>
+        <div class="del-label">Entrega estimada</div>
+        <div class="del-date" id="r-delivery">—</div>
+      </div>
+    </div>
+
+    <!-- Timeline de seguimiento -->
+    <div class="tracking-timeline">
+      <h3>📍 Estado del Pedido</h3>
+      <div class="timeline" id="trackingTimeline">
+        <!-- Generado por JS -->
+      </div>
+    </div>
+
+    <!-- Productos del pedido -->
+    <div class="items-section">
+      <h3>🛒 Productos Pedidos</h3>
+      <div id="r-items">—</div>
+    </div>
+
+    <!-- Info de pago -->
+    <div class="payment-info" id="r-payment-info">
+      <!-- Generado por JS -->
+    </div>
+
+    <!-- Acciones -->
+    <div class="track-actions">
+      <a href="https://wa.me/18294317622" target="_blank" class="track-btn track-btn-wa">
+        <i class="fab fa-whatsapp"></i> Hablar con soporte
+      </a>
+      <button class="track-btn track-btn-ghost" onclick="searchOrder()">
+        <i class="fas fa-sync-alt"></i> Actualizar estado
+      </button>
+    </div>
+
+    <div class="refresh-info">
+      🔄 El seguimiento se actualiza automáticamente. Recarga la página para ver cambios.
+    </div>
+
+  </div>
+
+  <!-- EMPTY STATE (cuando entras sin código) -->
+  <div class="empty-state" id="emptyState">
+    <i class="fas fa-box-open"></i>
+    <h2>Sin pedidos recientes</h2>
+    <p>¿Ya realizaste una compra? Ingresa tu código de seguimiento arriba.<br>
+       El código lo recibiste por correo o mensaje de WhatsApp.</p>
+  </div>
+
+</main>
+
+<script>
+/* =============================================================
+   KATTY FLORISTERÍA — seguimiento.js
+   Rastrea pedidos en tiempo real desde Supabase o localStorage
+   ============================================================= */
+
+const API = (typeof KF_CONFIG !== 'undefined') ? KF_CONFIG.API_URL : 'http://localhost:3000';
+
+const STEP_ICONS = {
+  confirmed:  '✅',
+  preparing:  '🌸',
+  dispatched: '🚚',
+  delivered:  '🏠'
+};
+const STEP_DESCS = {
+  confirmed:  'Tu pedido ha sido recibido y confirmado.',
+  preparing:  'Nuestro equipo está preparando tu arreglo floral con flores frescas.',
+  dispatched: 'Tu pedido está en camino con nuestro mensajero.',
+  delivered:  '¡Tu pedido fue entregado exitosamente! Esperamos que te encante.'
+};
+const STATUS_MAP = {
+  pending:    { label: '⏳ Pendiente',   cls: 'status-pending'    },
+  confirmed:  { label: '✅ Confirmado',  cls: 'status-confirmed'  },
+  preparing:  { label: '🌸 Preparando', cls: 'status-preparing'  },
+  dispatched: { label: '🚚 En camino',  cls: 'status-dispatched' },
+  delivered:  { label: '🏠 Entregado',  cls: 'status-delivered'  }
+};
+const PAY_METHOD = { stripe:'💳 Tarjeta', paypal:'🅿️ PayPal', transfer:'🏦 Transferencia', whatsapp:'📱 WhatsApp/Banco' };
+const PAY_STATUS = { paid:'✅ Pagado', pending:'⏳ Pendiente', failed:'❌ Fallido' };
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('es-DO', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  } catch(e) { return iso; }
+}
+function formatDateTime(iso) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleString('es-DO', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  } catch(e) { return null; }
+}
+
+async function searchOrder() {
+  const code = document.getElementById('trackInput').value.trim().toUpperCase();
+  if (!code || code.length < 5) {
+    document.getElementById('trackInput').focus();
+    return;
+  }
+
+  // UI states
+  document.getElementById('loadingSpinner').style.display = 'block';
+  document.getElementById('resultCard').classList.remove('visible');
+  document.getElementById('notFound').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('searchBtn').disabled = true;
+
+  let order = null;
+
+  // 1. Intentar backend
+  try {
+    const res = await fetch(`${API}/api/orders/track/${code}`, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) { order = await res.json(); }
+  } catch(e) {
+    console.warn('Backend not available, checking localStorage');
+  }
+
+  // 2. Fallback: localStorage
+  if (!order) {
+    try {
+      const local = JSON.parse(localStorage.getItem('kf_orders') || '[]');
+      order = local.find(o => (o.tracking_code||'').toUpperCase() === code);
+    } catch(e) {}
+  }
+
+  document.getElementById('loadingSpinner').style.display = 'none';
+  document.getElementById('searchBtn').disabled = false;
+
+  if (!order) {
+    document.getElementById('notFound').style.display = 'block';
+    return;
+  }
+
+  renderOrder(order);
+}
+
+function renderOrder(order) {
+  // Status badge
+  const statusInfo = STATUS_MAP[order.status] || STATUS_MAP.pending;
+  document.getElementById('r-status-badge').textContent = statusInfo.label;
+  document.getElementById('r-status-badge').className   = `order-status-badge ${statusInfo.cls}`;
+
+  // Código y fecha
+  document.getElementById('r-code').textContent = order.tracking_code || '—';
+  document.getElementById('r-date').textContent = 'Pedido el ' + formatDate(order.created_at || order.date);
+
+  // Fecha estimada
+  if (order.estimated_delivery && order.status !== 'delivered') {
+    document.getElementById('deliveryEstimate').style.display = 'flex';
+    document.getElementById('r-delivery').textContent = formatDate(order.estimated_delivery);
+  } else if (order.status === 'delivered') {
+    document.getElementById('deliveryEstimate').innerHTML =
+      `<i class="fas fa-check-circle" style="color:var(--success)"></i>
+       <div><div class="del-label">Estado final</div>
+       <div class="del-date" style="color:var(--success)">¡Entregado con éxito! 🎉</div></div>`;
+  } else {
+    document.getElementById('deliveryEstimate').style.display = 'none';
+  }
+
+  // Timeline
+  const steps = order.tracking_steps || [
+    { step:'confirmed',  label:'✅ Pedido confirmado',    done:true,  time:order.created_at },
+    { step:'preparing',  label:'🌸 Preparando tu arreglo',done:false, time:null },
+    { step:'dispatched', label:'🚚 En camino',            done:false, time:null },
+    { step:'delivered',  label:'🏠 Entregado',            done:false, time:null }
+  ];
+
+  // Determinar cual es el "active" (el primero sin completar)
+  let activeSet = false;
+  const timelineEl = document.getElementById('trackingTimeline');
+  timelineEl.innerHTML = steps.map((s, i) => {
+    let cls = '';
+    if (s.done) { cls = 'done'; }
+    else if (!activeSet) { cls = 'active'; activeSet = true; }
+
+    const timeStr = s.time ? formatDateTime(s.time) : null;
+    const isLast  = i === steps.length - 1;
+
+    return `
+      <div class="timeline-item ${cls}">
+        <div class="timeline-left">
+          <div class="timeline-dot">
+            ${s.done ? '<i class="fas fa-check" style="font-size:11px;"></i>' : (STEP_ICONS[s.step] || '○')}
+          </div>
+          ${!isLast ? '<div class="timeline-line"></div>' : ''}
+        </div>
+        <div class="timeline-content">
+          <h4>${s.label || s.step}</h4>
+          ${timeStr ? `<div class="t-time">${timeStr}</div>` : ''}
+          <div class="t-desc">${STEP_DESCS[s.step] || ''}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Productos
+  const items = order.items_json || [];
+  const itemsEl = document.getElementById('r-items');
+  if (items.length) {
+    let total = 0;
+    itemsEl.innerHTML = items.map(i => {
+      const sub = (i.price||0) * (i.qty||1); total += sub;
+      return `
+        <div class="order-item-row">
+          <span class="i-name">${i.name}</span>
+          <span class="i-qty">× ${i.qty||1}</span>
+          <span class="i-price">RD$ ${sub.toLocaleString('es-DO')}</span>
+        </div>`;
+    }).join('') + `
+      <div class="order-item-row" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px;padding-top:10px;">
+        <span class="i-name" style="font-weight:600;color:#fff;">Total</span>
+        <span></span>
+        <span class="i-price" style="font-size:1rem;">RD$ ${(order.total||total).toLocaleString('es-DO')}</span>
+      </div>`;
+  } else {
+    itemsEl.innerHTML = '<p style="color:#666;font-size:.83rem;">Sin detalle de productos.</p>';
+  }
+
+  // Info de pago
+  const payInfo = document.getElementById('r-payment-info');
+  const method  = PAY_METHOD[order.payment_method] || '—';
+  const pstatus = PAY_STATUS[order.payment_status] || '—';
+  const isPaid  = order.payment_status === 'paid';
+  payInfo.innerHTML = `
+    <div class="pay-chip ${isPaid?'paid-chip':''}">
+      <i class="fas fa-${isPaid?'check-circle':'clock'}"></i>
+      <div><span>Pago:</span> <strong>${pstatus}</strong></div>
+    </div>
+    <div class="pay-chip">
+      <i class="fas fa-wallet"></i>
+      <div><span>Método:</span> <strong>${method}</strong></div>
+    </div>`;
+
+  // Mostrar resultado
+  document.getElementById('resultCard').classList.add('visible');
+}
+
+/* ── Auto-search si hay código en URL ───────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const code   = params.get('code') || params.get('tracking');
+  if (code) {
+    document.getElementById('trackInput').value = code.toUpperCase();
+    document.getElementById('emptyState').style.display = 'none';
+    searchOrder();
+  }
+
+  // Auto-actualizar cada 60 segundos si hay un pedido en pantalla
+  setInterval(() => {
+    const code = document.getElementById('trackInput').value.trim();
+    if (code && document.getElementById('resultCard').classList.contains('visible')) {
+      searchOrder();
+    }
+  }, 60000);
+});
+</script>
+</body>
+</html>
