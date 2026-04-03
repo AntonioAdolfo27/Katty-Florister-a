@@ -1,62 +1,60 @@
 /* =============================================================
-   KATTY FLORISTERÍA — config.js  v5.0
-   Detecta automáticamente local vs producción.
-   Funciona como capa de datos compartida entre
-   index.html, catalogo.html y admin.html
+   KATTY FLORISTERÍA — config.js  v6.0
+   Capa de datos unificada (Railway + Supabase)
+   Detecta automáticamente la API y maneja productos.
    ============================================================= */
 
 const KF_CONFIG = (() => {
-  const host = window.location.hostname;
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '';
-  const API_URL = isLocal ?"https://katty-florister-a-production.up.railway.app": window.location.origin;
+  // URL de tu servidor en Railway (Backend)
+  const RAILWAY_URL = "https://katty-florister-a-production.up.railway.app";
+  
   return {
-    API_URL,
+    API_URL: RAILWAY_URL,
     WA_NUMBER: '18294317622',
     STORE_NAME: 'Katty Floristería'
   };
 })();
 
-/* ── PRODUCTOS POR DEFECTO ──────────────────────────────────
-   Admin guarda en localStorage['kf_products'].
-   index.html y catalogo.html leen de ahí primero.
-   ─────────────────────────────────────────────────────────── */
+/* ── PRODUCTOS POR DEFECTO (Backup / Primera carga) ───────── */
 const KF_DEFAULT_PRODUCTS = {
   tipo: [
-    { id:'p001', name:'Arreglo Floral Blanco con Lirios',    price:1850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Arreglo+1',  desc:'Arreglo floral elegante en canasta con diseño clásico y delicado.',     badge:'new',  status:'active' },
-    { id:'p002', name:'Ramo de 12 Rosas Rojas',              price:2850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Rosas+Rojas', desc:'Ramo compuesto por 12 rosas rojas frescas de alta calidad.',            badge:'hot',  status:'active' },
-    { id:'p003', name:'Caja de Corazón de Rosas',            price:2850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Corazon',     desc:'Caja blanca con forma de corazón rellena con rosas rojas.',            badge:'',     status:'active' },
-    { id:'p004', name:'Caja Box Arrangement',                price:2850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Box',         desc:'Arreglo moderno en caja cilíndrica negra, sofisticado y decorado.',    badge:'',     status:'active' },
-    { id:'p005', name:'Arreglos Tipo Corona',                price:1850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Corona',      desc:'Arreglos florales grandes tipo corona en rojo y blanco.',              badge:'',     status:'active' },
-    { id:'p006', name:'Puchón Premium 300 Rosas',            price:8850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=300+Rosas',   desc:'Ramo de rosas rojas con aproximadamente 300 flores frescas.',          badge:'hot',  status:'active' },
-    { id:'p007', name:'Arreglo Escultural Rosas y Lirios',   price:2000, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Escultural',  desc:'Diseño arquitectónico que eleva tus momentos especiales.',             badge:'',     status:'active' },
-    { id:'p008', name:'Caja de Rosas Redondas',              price:2000, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Redondas',    desc:'Diseño clásico con rosas rojas en caja negra mate.',                  badge:'',     status:'active' },
-    { id:'p009', name:'Corazón de Verano: Girasoles y Rosas',price:5500, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Girasoles',   desc:'Corazón de girasoles perfectamente enmarcado.',                        badge:'new',  status:'active' },
-    { id:'p010', name:'Corazón de la Realeza',               price:1850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Realeza',     desc:'Diseño exclusivo en forma de corazón, belleza clásica.',               badge:'',     status:'active' },
+    { id:'p001', name:'Arreglo Floral Blanco con Lirios', price:1850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Arreglo+1', desc:'Arreglo floral elegante en canasta con diseño clásico y delicado.', badge:'new', status:'active' },
+    { id:'p002', name:'Ramo de 12 Rosas Rojas', price:2850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Rosas+Rojas', desc:'Ramo compuesto por 12 rosas rojas frescas de alta calidad.', badge:'hot', status:'active' },
+    { id:'p006', name:'Puchón Premium 300 Rosas', price:8850, img:'https://placehold.co/400x300/1a1a22/ff4081?text=300+Rosas', desc:'Ramo de rosas rojas con aproximadamente 300 flores frescas.', badge:'hot', status:'active' }
   ],
-  ocasion: [
-    { id:'p011', name:'Arreglo Romántico con Peluche y Globos', price:2400, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Peluche',     desc:'Regalo de amor con oso de peluche, caja y dulces.',                badge:'hot', status:'active' },
-    { id:'p012', name:'Arreglo de Cumpleaños Especial',         price:1900, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Cumpleanios', desc:'Arreglo festivo ideal para celebrar el cumpleaños.',               badge:'',    status:'active' },
-    { id:'p013', name:'Bouquet San Valentín',                   price:3200, img:'https://placehold.co/400x300/1a1a22/ff4081?text=San+Valentin',desc:'El regalo perfecto para expresar tu amor.',                         badge:'new', status:'active' },
-    { id:'p014', name:'Corona Funeraria Elegante',              price:4500, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Corona+Fun', desc:'Arreglo fúnebre de alta calidad para rendir homenaje.',             badge:'',    status:'active' },
-  ],
-  premium: [
-    { id:'p020', name:'Luxury Box Edición Especial',    price:12000, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Luxury+Box',  desc:'Caja de lujo con flores importadas y detalles exclusivos.', badge:'hot',  status:'active' },
-    { id:'p021', name:'Edición Limitada – Rosas Azules',price: 9500, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Rosas+Azules',desc:'Rosas azules únicas, disponibles por tiempo limitado.',     badge:'sale', status:'active' },
-    { id:'p022', name:'Canasta Premium con Bebidas',    price: 7800, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Canasta',     desc:'Arreglo floral combinado con bebidas de alta gama.',        badge:'new',  status:'active' },
-  ],
-  oferta: [
-    { id:'p030', name:'Docena de Rosas – 20% OFF',      price:1500, img:'https://placehold.co/400x300/1a1a22/ff4081?text=Oferta+Rosas', desc:'¡Aprovecha! Docena de rosas frescas con descuento especial.',  badge:'sale', status:'active' },
-    { id:'p031', name:'Arreglo Básico – Oferta del Mes', price:900,  img:'https://placehold.co/400x300/1a1a22/ff4081?text=Basico',      desc:'Arreglo floral sencillo pero elegante a precio especial.',     badge:'sale', status:'active' },
-  ]
+  ocasion: [],
+  premium: [],
+  oferta: []
 };
 
-/* ── FUNCIONES COMPARTIDAS DE PRODUCTO ─────────────────────── */
-function kf_getProducts() {
+/* ── FUNCIONES DE DATOS (Prioridad: Servidor Railway) ─────── */
+
+/**
+ * Obtiene los productos desde el backend. 
+ * Si falla, retorna el localStorage o los defaults.
+ */
+async function kf_getProducts() {
   try {
-    const s = localStorage.getItem('kf_products');
-    if (!s) return JSON.parse(JSON.stringify(KF_DEFAULT_PRODUCTS));
+    const res = await fetch(`${KF_CONFIG.API_URL}/api/products`, {
+      signal: AbortSignal.timeout(5000) // Timeout de 5 segundos
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      console.log("✅ Datos sincronizados con Supabase");
+      return data;
+    }
+  } catch (e) {
+    console.warn("⚠️ Servidor Railway no responde, usando respaldo local:", e.message);
+  }
+
+  // Respaldo en caso de que el backend esté caído
+  const s = localStorage.getItem('kf_products');
+  if (!s) return JSON.parse(JSON.stringify(KF_DEFAULT_PRODUCTS));
+  
+  try {
     const parsed = JSON.parse(s);
-    // Asegurar que todas las categorías existen
+    // Asegurar que todas las categorías existen para evitar errores de render
     const cats = ['tipo','ocasion','premium','oferta'];
     cats.forEach(c => { if (!Array.isArray(parsed[c])) parsed[c] = []; });
     return parsed;
@@ -65,17 +63,25 @@ function kf_getProducts() {
   }
 }
 
+/**
+ * Guarda los productos en localStorage (como cache rápido)
+ */
 function kf_saveProducts(p) {
   localStorage.setItem('kf_products', JSON.stringify(p));
-  // Disparar evento para que otras páginas (abiertas en otras pestañas) se actualicen
+  // Disparar timestamp para sincronizar pestañas abiertas
   try { localStorage.setItem('kf_products_ts', Date.now()); } catch(e) {}
 }
 
-function kf_getAllProductsFlat() {
-  const p = kf_getProducts();
+/**
+ * Retorna todos los productos en una sola lista (Array plano)
+ */
+async function kf_getAllProductsFlat() {
+  const p = await kf_getProducts();
   const all = [];
   ['tipo','ocasion','premium','oferta'].forEach(cat => {
-    (p[cat]||[]).forEach(prod => all.push({ ...prod, _cat: cat }));
+    if (Array.isArray(p[cat])) {
+      p[cat].forEach(prod => all.push({ ...prod, _cat: cat }));
+    }
   });
   return all;
 }
@@ -85,15 +91,18 @@ function kf_renderProductCard(p, showFullName = false) {
   const badge = p.badge
     ? `<div class="product-badge badge-${p.badge}">${p.badge==='new'?'Nuevo':p.badge==='hot'?'🔥 Popular':'% Oferta'}</div>`
     : '';
+  
+  // Limitar nombre a 4 palabras para estética si no se pide nombre completo
   const displayName = showFullName ? p.name : p.name.split(' ').slice(0,4).join(' ');
-  const reviews = Math.floor(Math.random()*180)+20;
+  const reviews = Math.floor(Math.random()*180)+20; // Simulación de reseñas
+  
   return `
     <div class="product-card" data-id="${p.id}" data-name="${p.name.replace(/"/g,'&quot;')}" data-price="${p.price}">
       <div class="product-image">
         ${badge}
-        <img src="${p.img||'https://placehold.co/400x300/1a1a22/ff4081?text=🌸'}"
+        <img src="${p.img || 'https://placehold.co/400x300/1a1a22/ff4081?text=🌸'}" 
              alt="${p.name}" loading="lazy"
-             onerror="this.src='https://placehold.co/400x300/1a1a22/ff4081?text=🌸'">
+             onerror="this.src='https://placehold.co/400x300/1a1a22/ff4081?text=Imagen+no+disponible'">
       </div>
       <button class="favorite-btn" aria-label="Favorito"><i class="fa-regular fa-heart"></i></button>
       <h4>${displayName}</h4>
@@ -102,7 +111,7 @@ function kf_renderProductCard(p, showFullName = false) {
         <i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
         <span>(${reviews})</span>
       </div>
-      <p class="product-desc">${p.desc||''}</p>
+      <p class="product-desc">${p.desc || 'Hermoso arreglo de Katty Floristería.'}</p>
       <div class="price">RD$ ${Number(p.price).toLocaleString('es-DO')}</div>
       <div class="product-actions">
         <input type="number" min="1" value="1" aria-label="Cantidad">
@@ -112,13 +121,23 @@ function kf_renderProductCard(p, showFullName = false) {
     </div>`;
 }
 
-/* ── Cargar PayPal SDK dinámicamente ────────────────────────
-   Solo se carga en pago.html cuando se necesita.
-   El Client ID viene del backend (o puedes hardcodearlo aquí
-   para el cliente: PAYPAL_CLIENT_ID es pública, no es secreta)
-   ─────────────────────────────────────────────────────────── */
+/* ── PASARELAS DE PAGO (PayPal / Stripe) ───────────────────── */
+
+async function kf_loadPaymentConfig() {
+  try {
+    const res = await fetch(KF_CONFIG.API_URL + '/api/payment-config');
+    if (res.ok) {
+      const cfg = await res.json();
+      if (cfg.stripePublishableKey) window.STRIPE_PK = cfg.stripePublishableKey;
+      if (cfg.paypalClientId) await kf_loadPayPalSDK(cfg.paypalClientId);
+    }
+  } catch(e) {
+    console.warn('Configuración de pagos no disponible:', e.message);
+  }
+}
+
 function kf_loadPayPalSDK(clientId) {
-  if (!clientId || clientId.startsWith('AXX')) return; // placeholder
+  if (!clientId || clientId.startsWith('AXX')) return; 
   return new Promise((resolve, reject) => {
     if (window.paypal) { resolve(); return; }
     const s = document.createElement('script');
@@ -127,20 +146,4 @@ function kf_loadPayPalSDK(clientId) {
     s.onerror = reject;
     document.head.appendChild(s);
   });
-}
-
-/* ── Obtener configuración de pagos del backend ─────────────
-   Llama a /api/payment-config para obtener claves públicas
-   ─────────────────────────────────────────────────────────── */
-async function kf_loadPaymentConfig() {
-  try {
-    const res = await fetch(KF_CONFIG.API_URL + '/api/payment-config', { signal: AbortSignal.timeout(4000) });
-    if (res.ok) {
-      const cfg = await res.json();
-      if (cfg.stripePublishableKey) window.STRIPE_PK = cfg.stripePublishableKey;
-      if (cfg.paypalClientId)       await kf_loadPayPalSDK(cfg.paypalClientId);
-    }
-  } catch(e) {
-    console.warn('Payment config not loaded (backend offline):', e.message);
-  }
 }
