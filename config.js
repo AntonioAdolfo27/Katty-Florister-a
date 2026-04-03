@@ -8,7 +8,7 @@
 const KF_CONFIG = (() => {
   const host = window.location.hostname;
   const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '';
-  const API_URL = isLocal ? 'http://localhost:3000' : window.location.origin;
+  const API_URL = isLocal ?"https://katty-florister-a-production.up.railway.app": window.location.origin;
   return {
     API_URL,
     WA_NUMBER: '18294317622',
