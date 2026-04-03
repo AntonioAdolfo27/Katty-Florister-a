@@ -16,6 +16,8 @@ const app    = express();
 const PORT   = process.env.PORT || 3000;
 const BUCKET = 'product-images';
 
+app.set('trust proxy', 1);
+
 // ── Stripe (tarjetas internacionales Visa/MC) ───────────────
 let stripe = null;
 if (process.env.STRIPE_SECRET_KEY) {
@@ -58,7 +60,7 @@ app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
 // ── Servir frontend ─────────────────────────────────────────
   app.use(express.static(path.join(__dirname)));
-    
+
 // Generar código de tracking tipo: KF-2025-XXXXX
 function generateTrackingCode() {
   const year = new Date().getFullYear();
