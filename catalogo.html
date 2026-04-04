@@ -277,7 +277,7 @@
         <ul>
           <li><a href="tel:+18294317622">📞 829-431-7622</a></li>
           <li><a href="https://wa.me/18294317622" target="_blank">💬 WhatsApp</a></li>
-          <li><a href="/cdn-cgi/l/email-protection#7d14131b123d161c0909041b11120f180f141c531e1210">✉️ Email</a></li>
+          <li><a href="mailto:info@kattyfloreria.com">✉️ Email</a></li>
           <li><a href="index.html#contactos">📍 Ver mapa</a></li>
         </ul>
       </div>
@@ -380,7 +380,7 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="funciones.js"></script>
+<script src="funciones.js"></script>
 <script>
 function goToPayment() {
   const cart = JSON.parse(localStorage.getItem('kf_cart') || '[]');
@@ -391,8 +391,7 @@ function goToPayment() {
 <script>
 /* ══════════════════════════════════════════════════════════
    CATÁLOGO — Lógica de renderizado y filtros
-   v8.0 — USA kf_getProducts() SÍNCRONO (config.js v8.0)
-   Sincroniza con Railway en background via kf_syncProducts()
+   CORREGIDO PARA ASYNC / SUPABASE / RAILWAY
 ══════════════════════════════════════════════════════════ */
 
 const CAT_NAMES = {
@@ -402,124 +401,157 @@ const CAT_NAMES = {
   oferta: '🌸 Ofertas Especiales'
 };
 
-/* ── Renderizar todas las secciones (SÍNCRONO) ──────────── */
-function catRenderAll() {
+/* ── Renderizar todas las secciones ─────────────────────── */
+async function catRenderAll() {
   try {
-    // kf_getProducts() es SÍNCRONO en config.js v8.0
-    const P = kf_getProducts();
+    const P = await kf_getProducts();
 
     ['tipo', 'ocasion', 'premium', 'oferta'].forEach(cat => {
       const grid = document.getElementById('grid-' + cat);
       if (!grid) return;
 
-      const active = (P[cat] || []).filter(p => p.status !== 'inactive');
+      const active = (P[cat] || []).filter(
+        p => p.status !== 'inactive'
+      );
 
       grid.innerHTML = active.length
         ? active.map(p => kf_renderProductCard(p, true)).join('')
-        : `<p style="color:#666;padding:20px 0;grid-column:1/-1;">
-             No hay productos en esta categoría aún.
-           </p>`;
+        : `
+          <p style="color:#666;padding:20px 0;grid-column:1/-1;">
+            No hay productos en esta categoría aún.
+          </p>
+        `;
     });
 
-    if (window.bindProductEvents) window.bindProductEvents();
-    console.log('✅ Catálogo renderizado');
-  } catch (err) {
-    console.error('❌ Error renderizando catálogo:', err);
+    if (window.bindProductEvents) {
+      window.bindProductEvents();
+    }
+
+    console.log("✅ Catálogo renderizado correctamente");
+  } catch (error) {
+    console.error("❌ Error renderizando catálogo:", error);
   }
 }
 
-/* ── Filtrar por categoría (SÍNCRONO) ───────────────────── */
-function catFilter(cat, btn) {
-  document.querySelectorAll('.cat-filter-btn')
+/* ── Filtrar por categoría ──────────────────────────────── */
+async function catFilter(cat, btn) {
+  document
+    .querySelectorAll('.cat-filter-btn')
     .forEach(b => b.classList.remove('active'));
+
   btn.classList.add('active');
 
-  if (cat === 'all') { catClearFilter(); return; }
+  if (cat === 'all') {
+    catClearFilter();
+    return;
+  }
 
-  const P = kf_getProducts();
-  const items = (P[cat] || []).filter(p => p.status !== 'inactive');
+  const P = await kf_getProducts();
+
+  const items = (P[cat] || []).filter(
+    p => p.status !== 'inactive'
+  );
 
   document.getElementById('filterTitle').textContent =
     `${CAT_NAMES[cat] || cat} (${items.length} productos)`;
 
-  document.getElementById('filterGrid').innerHTML = items.length
-    ? items.map(p => kf_renderProductCard(p, true)).join('')
-    : `<p style="color:#666;padding:40px 0;text-align:center;grid-column:1/-1;">
-         Sin productos en esta categoría.
-       </p>`;
+  document.getElementById('filterGrid').innerHTML =
+    items.length
+      ? items.map(p => kf_renderProductCard(p, true)).join('')
+      : `
+        <p style="color:#666;padding:40px 0;text-align:center;grid-column:1/-1;">
+          Sin productos en esta categoría.
+        </p>
+      `;
 
   document.getElementById('filterResults').style.display = 'block';
   document.getElementById('catSections').style.display = 'none';
 
-  if (window.bindProductEvents) window.bindProductEvents();
+  if (window.bindProductEvents) {
+    window.bindProductEvents();
+  }
 }
 
-/* ── Búsqueda (SÍNCRONO) ────────────────────────────────── */
-function catSearch(q) {
+/* ── Búsqueda ────────────────────────────────────────────── */
+async function catSearch(q) {
   const h = document.getElementById('catSearchHero');
   const n = document.getElementById('searchInput');
+
   if (h && h.value !== q) h.value = q;
   if (n && n.value !== q) n.value = q;
 
-  if (!q.trim()) { catClearFilter(); return; }
+  if (!q.trim()) {
+    catClearFilter();
+    return;
+  }
 
-  // kf_getAllProductsFlat() es SÍNCRONO en config.js v8.0
-  const all = kf_getAllProductsFlat();
-  const ql = q.toLowerCase();
+  const all = await kf_getAllProductsFlat();
 
   const res = all.filter(p =>
     p.status !== 'inactive' &&
     (
-      p.name.toLowerCase().includes(ql) ||
-      (p.desc || '').toLowerCase().includes(ql) ||
-      (p.description || '').toLowerCase().includes(ql)
+      p.name.toLowerCase().includes(q.toLowerCase()) ||
+      (p.desc || '').toLowerCase().includes(q.toLowerCase()) ||
+      (p.description || '').toLowerCase().includes(q.toLowerCase())
     )
   );
 
   document.getElementById('filterTitle').textContent =
     `Búsqueda: "${q}" — ${res.length} resultado(s)`;
 
-  document.getElementById('filterGrid').innerHTML = res.length
-    ? res.map(p => kf_renderProductCard(p, true)).join('')
-    : `<p style="color:#888;padding:48px 0;text-align:center;grid-column:1/-1;">
-         No se encontraron resultados para "<strong>${q}</strong>" 🌸
-       </p>`;
+  document.getElementById('filterGrid').innerHTML =
+    res.length
+      ? res.map(p => kf_renderProductCard(p, true)).join('')
+      : `
+        <p style="color:#888;padding:48px 0;text-align:center;grid-column:1/-1;">
+          No se encontraron resultados para
+          "<strong>${q}</strong>" 🌸
+        </p>
+      `;
 
   document.getElementById('filterResults').style.display = 'block';
   document.getElementById('catSections').style.display = 'none';
 
-  if (window.bindProductEvents) window.bindProductEvents();
+  if (window.bindProductEvents) {
+    window.bindProductEvents();
+  }
 }
 
 /* ── Limpiar filtro ─────────────────────────────────────── */
 function catClearFilter() {
   document.getElementById('filterResults').style.display = 'none';
   document.getElementById('catSections').style.display = 'block';
+
   document.querySelectorAll('.cat-filter-btn')
-    .forEach((b, i) => b.classList.toggle('active', i === 0));
+    .forEach((b, i) => {
+      b.classList.toggle('active', i === 0);
+    });
+
   const h = document.getElementById('catSearchHero');
   const n = document.getElementById('searchInput');
+
   if (h) h.value = '';
   if (n) n.value = '';
 }
 
+/* ── Auto actualizar ────────────────────────────────────── */
+function autoRefreshCatalog() {
+  setInterval(() => {
+    catRenderAll();
+  }, 5000);
+}
+
 /* ── Init ───────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  // 1. Render inmediato con datos locales (síncrono)
-  catRenderAll();
+document.addEventListener('DOMContentLoaded', async () => {
+  await catRenderAll();
+  autoRefreshCatalog();
 
-  // 2. Sincronizar con Railway en background, re-render al terminar
-  if (typeof kf_syncProducts === 'function') {
-    kf_syncProducts(function() {
-      catRenderAll(); // re-render con datos actualizados del servidor
-    });
-  }
-
-  // 3. Escuchar cambios del admin en tiempo real (mismo navegador)
-  window.addEventListener('storage', e => {
-    // Si el admin guarda productos, actualizar catálogo automáticamente
-    if (e.key === 'kf_products' || e.key === 'kf_products_ts') {
-      catRenderAll();
+  window.addEventListener('storage', async e => {
+    if (
+      e.key === 'kf_products' ||
+      e.key === 'kf_products_ts'
+    ) {
+      await catRenderAll();
     }
   });
 });
