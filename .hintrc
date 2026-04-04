@@ -1,0 +1,42 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "disown-opener": "off",
+    "no-inline-styles": "off",
+    "axe/forms": [
+      "default",
+      {
+        "select-name": "off"
+      }
+    ],
+    "axe/name-role-value": [
+      "default",
+      {
+        "button-name": "off"
+      }
+    ],
+    "compat-api/css": [
+      "default",
+      {
+        "ignore": [
+          "-webkit-overflow-scrolling"
+        ]
+      }
+    ]
+  },
+  "browserslist": [
+    "defaults",
+    "not ie 11",
+    "not and_chr <= 145",
+    "not and_ff <= 147",
+    "not chrome <= 146",
+    "not edge <= 145",
+    "not firefox <= 148",
+    "not ios_saf <= 26.3",
+    "not opera <= 127",
+    "not safari <= 26.3",
+    "not samsung <= 29"
+  ]
+}
