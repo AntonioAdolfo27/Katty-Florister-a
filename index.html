@@ -362,7 +362,7 @@
       </div>
       <div class="contact-item">
         <span class="contact-icon">✉️</span>
-        <div><h4>Email</h4><p><a href="/cdn-cgi/l/email-protection#c8a1a6aea788a3a9bcbcb1aea4a7baadbaa1a9e6aba7a5"><span class="__cf_email__" data-cfemail="7c15121a133c171d0808051a10130e190e151d521f1311">[email&#160;protected]</span></a></p></div>
+        <div><h4>Email</h4><p><a href="mailto:info@kattyfloreria.com">info@kattyfloreria.com</a></p></div>
       </div>
       <div class="owner-card">
         <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🌸</div>
@@ -517,7 +517,7 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="funciones.js"></script>
+<script src="funciones.js"></script>
 <script>
 /* ══ PRODUCTS DATA ══════════════════════════════════════════ */
 const DEFAULT_PRODUCTS = {
@@ -551,7 +551,7 @@ const DEFAULT_PRODUCTS = {
 };
 
 function getProducts() {
-  return kf_getProducts(); // SÍNCRONO en v8.0
+  return kf_getProducts();
 }
 function renderStars() {
   const n = Math.floor(Math.random()*150)+30;
@@ -591,29 +591,20 @@ function renderAllProducts() {
   if(window.bindProductEvents) window.bindProductEvents();
 }
 
-// Render inmediato + sincronización con servidor en background
-document.addEventListener('DOMContentLoaded', function() {
-  renderAllProducts();
-  if (typeof kf_syncProducts === 'function') {
-    kf_syncProducts(function() {
-      renderAllProducts(); // re-render con datos actualizados del servidor
-    });
-  }
-});
-
 /* SEARCH */
 function searchProducts(q) {
   if (!q.trim()) { clearSearch(); return; }
   const P = getProducts();
-  const all = [...P.tipo, ...P.ocasion, ...P.premium, ...P.oferta];
-  const res = all.filter(p =>
-    p.name.toLowerCase().includes(q.toLowerCase()) ||
-    p.desc.toLowerCase().includes(q.toLowerCase())
-  );
-
-  document.getElementById("searchResults").style.display = "block";
-  document.getElementById("mainCatalog").style.display = "none";
+  const all = [...P.tipo,...P.ocasion,...P.premium,...P.oferta];
+  const res = all.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.desc.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById("searchResults").style.display="block";
+  document.getElementById("mainCatalog").style.display="none";
   document.getElementById("searchResultsGrid").innerHTML = res.length
     ? res.map(renderProductCard).join("")
-    : `<p style="color:#888;grid-column:1/-1;text-align:center;padding:40px 20px;">No se encontraron resultados para "<strong>${q}</strong>"</p>`;
+    : `<p style="color:#888;grid-column:1/-1;text-align:center;padding:40px 20px;">No se encontraron resultados para "<strong>${q}</strong>" 🌸</p>`;
+  if(window.bindProductEvents) window.bindProductEvents();
+}
+function clearSearch(){
+  document.getElementById("searchResults").style.display="none";
+  document.getElementById("mainCatalog").style.display="block";
 }
