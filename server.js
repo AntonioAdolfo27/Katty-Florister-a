@@ -57,7 +57,7 @@ app.use(express.urlencoded({ extended: true, limit: '12mb' }));
 app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
 // ── Servir frontend ─────────────────────────────────────────
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname,)));
 
 // =============================================================
 // UTILIDADES
@@ -379,7 +379,7 @@ app.get('/api/status', (req, res) => {
 
 // ── Fallback SPA ────────────────────────────────────────────
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname,'index.html'));
 });
 
 app.listen(PORT, () => {
