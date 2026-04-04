@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -824,16 +823,23 @@ function showSection(name) {
 // ===== DATOS =====
 const DEFAULT_PRODUCTS = { tipo:[], ocasion:[], premium:[], oferta:[] }; // Inicialización vacía segura
 
-// getProducts() — SÍNCRONO, lee localStorage directamente via config.js v8
 function getProducts() {
-  return kf_getProducts();
+  return kf_getProducts(); // usa config.js compartido
 }
 function saveProducts(p) {
-  kf_saveProducts(p);
+  kf_saveProducts(p); // uses config.js - also fires storage event for catalogo.html
 }
-// getAllProducts() — SÍNCRONO
 function getAllProducts() {
-  return kf_getAllProductsFlat();
+  const p = getProducts();
+  const all = [];
+  Object.keys(p).forEach(cat => {
+    if(Array.isArray(p[cat])){
+        p[cat].forEach(prod => {
+          all.push({...prod, _cat: cat});
+        });
+    }
+  });
+  return all;
 }
 
 function getAnalytics() {
@@ -857,22 +863,7 @@ function initAdmin() {
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       topbarDate.textContent = now.toLocaleDateString('es-DO', options);
   }
-  // Renderizar inmediatamente con datos locales
   renderDashboard();
-
-  // Sincronizar con el servidor en background y actualizar si hay cambios
-  if (typeof kf_syncProducts === 'function') {
-    kf_syncProducts(function(grouped) {
-      // Re-renderizar si la sección activa es productos o dashboard
-      const activeSection = document.querySelector('.admin-section.active');
-      if (activeSection) {
-        const id = activeSection.id;
-        if (id === 'section-products') renderProducts();
-        if (id === 'section-dashboard') renderDashboard();
-        if (id === 'section-analytics') renderAnalytics();
-      }
-    });
-  }
 }
 
 // ===== DASHBOARD RENDER =====
@@ -1217,7 +1208,7 @@ async function saveProduct() {
       
       try {
         // Intentar subir al backend
-        const response = await fetch(`${KF_CONFIG.API_URL}/api/upload`, {
+        const response = await fetch(`${API_URL}/api/upload`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: file.name, type: file.type, base64: base64 }),
           signal: AbortSignal.timeout(8000) // timeout 8s
@@ -1735,4 +1726,4 @@ function downloadFile(filename, content, contentType) {
 }
 </script>
 </body>
-</html>  
+</html>
