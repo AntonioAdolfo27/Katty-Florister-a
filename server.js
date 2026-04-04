@@ -57,7 +57,7 @@ app.use(express.urlencoded({ extended: true, limit: '12mb' }));
 app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
 // ── Servir frontend ─────────────────────────────────────────
-app.use(express.static(path.join(__dirname,)));
+app.use(express.static(path.join(__dirname)));
 
 // =============================================================
 // UTILIDADES
