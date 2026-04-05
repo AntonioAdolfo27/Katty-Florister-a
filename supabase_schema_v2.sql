@@ -121,3 +121,4 @@ WHERE table_schema = 'public'
   AND table_type = 'BASE TABLE'
   AND table_name IN ('products','orders','subscribers','promotions','app_config','email_logs')
 ORDER BY table_name;
+
