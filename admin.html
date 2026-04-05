@@ -1390,7 +1390,7 @@ async function saveProduct() {
       try {
         // Intentar subir al backend
         const response = await fetch(`${API_URL}/api/upload`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: {'Content-Type': 'application/json',...getAuthHeaders()},
           body: JSON.stringify({ name: file.name, type: file.type, base64: base64 }),
           signal: AbortSignal.timeout(8000) // timeout 8s
         });
