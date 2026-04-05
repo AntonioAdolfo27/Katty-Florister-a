@@ -785,7 +785,6 @@ function doLogin() {
     initAdmin();
   } else {
     if(errorMsg) errorMsg.style.display = 'block';
-    // Feedback visual de error
     const card = document.querySelector('.login-card');
     if(card){
         card.animate([
@@ -808,6 +807,74 @@ if (localStorage.getItem('kf_admin_logged') === '1') {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('adminLayout').style.display = 'flex';
   initAdmin();
+
+}
+
+// ===== AUTH — Token en memoria, se borra al refrescar =====
+// ⚠️ NUNCA se guarda en localStorage ni sessionStorage
+// → cada vez que se refresca la página, hay que volver a hacer login
+let ADMIN_TOKEN = null;
+
+function getAuthHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${ADMIN_TOKEN || ''}`
+  };
+}
+
+async function doLogin() {
+  const userEl  = document.getElementById('loginUser');
+  const passEl  = document.getElementById('loginPass');
+  const errorMsg = document.getElementById('loginError');
+  const btn     = document.querySelector('.login-btn');
+
+  const username = (userEl?.value || '').trim();
+  const password = passEl?.value || '';
+  if (!username || !password) {
+    if(errorMsg) { errorMsg.style.display = 'block'; errorMsg.textContent = 'Completa usuario y contraseña'; }
+    return;
+  }
+
+  if(btn) { btn.disabled = true; btn.textContent = '⏳ Verificando...'; }
+
+  try {
+    const res  = await fetch(`${API_URL}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.token) {
+      ADMIN_TOKEN = data.token; // solo en memoria
+      if(errorMsg) errorMsg.style.display = 'none';
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('adminLayout').style.display = 'flex';
+      initAdmin();
+    } else {
+      if(errorMsg) {
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = data.error || 'Credenciales incorrectas';
+      }
+      const card = document.querySelector('.login-card');
+      if(card) card.animate([
+        { transform:'translateX(-8px)' },{ transform:'translateX(8px)' },
+        { transform:'translateX(-4px)' },{ transform:'translateX(0)' }
+      ], { duration: 320 });
+    }
+  } catch(e) {
+    if(errorMsg) {
+      errorMsg.style.display = 'block';
+      errorMsg.textContent = '⚠️ Sin conexión al servidor';
+    }
+  }
+
+  if(btn) { btn.disabled = false; btn.textContent = 'Ingresar al Panel'; }
+}
+
+function doLogout() {
+  ADMIN_TOKEN = null;
+  location.reload();
 }
 
 // ===== SIDEBAR =====
@@ -941,7 +1008,7 @@ async function checkServerStatus() {
 async function syncOrdersFromServer(silent = false) {
   if (!silent) showToast('🔄 Cargando pedidos...', 'info');
   try {
-    const res = await fetch(`${API_URL}/api/orders`, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(`${API_URL}/api/orders`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(8000) });
     if (res.ok) {
       const data = await res.json();
       localStorage.setItem('kf_orders', JSON.stringify(data));
@@ -1624,170 +1691,194 @@ function renderAnalytics() {
   }
 }
 
-// ===== SUSCRIPTORES =====
-function renderSubscribers() {
-  let subs = [];
-  try { subs = JSON.parse(localStorage.getItem('kf_subscribers') || '[]'); } catch(e){}
+// ===== SUSCRIPTORES (Supabase) =====
+async function renderSubscribers() {
   const tbody = document.getElementById('subscribersTbody');
   if(!tbody) return;
-  
-  if (subs.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#444;padding:60px;"><i class="fas fa-envelope-open-text" style="font-size:30px; display:block; margin-bottom:10px;"></i>No hay suscriptores.</td></tr>`;
-    return;
-  }
-  subs.reverse();
-
-  tbody.innerHTML = subs.map((s,i)=>`
-    <tr>
-      <td style="color:#666;font-size:12px;">#${String(subs.length - i).padStart(3,'0')}</td>
-      <td style="font-weight:500;color:#fff;"><i class="fas fa-at" style="color:#555; margin-right:5px;"></i>${(s.email||'').replace(/</g, "&lt;")}</td>
-      <td>
-        <div style="display:flex; gap:8px;">
+  tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:40px;color:#666;"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>`;
+  try {
+    const res  = await fetch(`${API_URL}/api/subscribers`, { headers: getAuthHeaders() });
+    if (res.status === 401) { showToast('🔒 Sesión expirada, recarga la página','danger'); return; }
+    const subs = await res.json();
+    if (!Array.isArray(subs) || subs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#444;padding:60px;"><i class="fas fa-envelope-open-text" style="font-size:30px;display:block;margin-bottom:10px;"></i>No hay suscriptores aún.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = subs.map((s,i) => `
+      <tr>
+        <td style="color:#666;font-size:12px;">#${String(i+1).padStart(3,'0')}</td>
+        <td style="font-weight:500;color:#fff;">
+          <i class="fas fa-at" style="color:#555;margin-right:5px;"></i>
+          ${(s.email||'').replace(/</g,'&lt;')}
+          ${s.name ? `<span style="color:#666;font-size:11px;margin-left:6px;">(${s.name})</span>` : ''}
+        </td>
+        <td style="color:#888;font-size:11px;">${s.created_at ? new Date(s.created_at).toLocaleDateString('es-DO') : '—'}</td>
+        <td>
+          <div style="display:flex;gap:8px;">
             <a href="mailto:${s.email}" class="btn-sm btn-ghost" title="Enviar correo"><i class="fas fa-paper-plane"></i></a>
-            <button class="btn-sm btn-danger" onclick="deleteSubscriber('${s.email}')" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
-        </div>
-      </td>
-    </tr>`).join('');
+            <button class="btn-sm btn-danger" onclick="deleteSubscriber(${s.id},'${s.email}')" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#f44336;padding:40px;">Error al cargar: ${e.message}</td></tr>`;
+  }
 }
-function deleteSubscriber(email) {
-  // CORRECCIÓN: Uso seguro de deleteData global
-  window.confirmActionData = { action: 'delete_sub', email };
+
+async function deleteSubscriber(id, email) {
+  window.confirmActionData = { action: 'delete_sub', id, email };
   const msg = document.getElementById('confirmMessage');
   if(msg) msg.textContent = `¿Eliminar a "${email}"?`;
-  
   const execBtn = document.getElementById('confirmExecuteBtn');
-  if(execBtn){
-      execBtn.className = 'btn-sm btn-danger';
-      execBtn.textContent = 'Eliminar';
-      execBtn.onclick = () => {
-          let subs = [];
-          try { subs = JSON.parse(localStorage.getItem('kf_subscribers') || '[]'); } catch(e){}
-          subs = subs.filter(s=>s.email!==window.confirmActionData.email);
-          localStorage.setItem('kf_subscribers', JSON.stringify(subs));
-          renderSubscribers();
-          showToast('🗑️ Suscriptor eliminado', 'danger');
-          closeConfirm();
-      };
+  if(execBtn) {
+    execBtn.className = 'btn-sm btn-danger';
+    execBtn.textContent = 'Eliminar';
+    execBtn.onclick = async () => {
+      const res = await fetch(`${API_URL}/api/subscribers/${window.confirmActionData.id}`, { method:'DELETE', headers: getAuthHeaders() });
+      if (res.ok) { showToast('🗑️ Suscriptor eliminado','danger'); renderSubscribers(); }
+      else         showToast('❌ Error al eliminar','danger');
+      closeConfirm();
+    };
   }
-  const dialog = document.getElementById('confirmDialog');
-  if(dialog) dialog.classList.add('open');
-}
-function exportSubscribers() {
-  let subs = [];
-  try { subs = JSON.parse(localStorage.getItem('kf_subscribers') || '[]'); } catch(e){}
-  if(subs.length === 0) { showToast('⚠️ Lista vacía', 'warning'); return; }
-  const csv = 'Email,Fecha Registro\n' + subs.map(s=>`"${s.email}","${s.date||''}"`).join('\n');
-  downloadFile('suscriptores.csv', csv, 'text/csv;charset=utf-8;');
-  showToast('📥 Lista exportada', 'success');
+  document.getElementById('confirmDialog').classList.add('open');
 }
 
-// ===== PROMOCIONES =====
-function getPromos() { 
-    try {
-        const s = localStorage.getItem('kf_promos');
-        return s ? JSON.parse(s) : [];
-    } catch(e) { return []; }
+async function exportSubscribers() {
+  try {
+    const res  = await fetch(`${API_URL}/api/subscribers`, { headers: getAuthHeaders() });
+    const subs = await res.json();
+    if (!subs.length) { showToast('⚠️ Lista vacía','warning'); return; }
+    const csv = 'Email,Nombre,Fuente,Fecha Registro\n' +
+      subs.map(s => `"${s.email}","${s.name||''}","${s.source||'web'}","${s.created_at||''}"`).join('\n');
+    downloadFile('suscriptores.csv', csv, 'text/csv;charset=utf-8;');
+    showToast('📥 Lista exportada','success');
+  } catch(e) { showToast('❌ Error al exportar','danger'); }
 }
-function savePromos(p) { localStorage.setItem('kf_promos', JSON.stringify(p)); }
-function renderPromotions() {
-  const promos = getPromos();
+
+// ===== PROMOCIONES (Supabase) =====
+async function renderPromotions() {
   const grid = document.getElementById('promoGrid');
   if(!grid) return;
-  
-  if (promos.length === 0) {
-    grid.innerHTML = `<div class="empty-state"><i class="fas fa-tags"></i><p>No hay promociones.</p></div>`;
-    return;
-  }
-  grid.innerHTML = promos.map(p=>`
-    <div class="promo-card">
-      <div class="promo-header">
-        <div class="promo-title-wrap">
-          <h4>${(p.title||'').replace(/</g, "&lt;")}</h4>
-          <p>${(p.desc||'Sin descripción').replace(/</g, "&lt;")}</p>
+  grid.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando...</p></div>`;
+  try {
+    const res   = await fetch(`${API_URL}/api/promotions`, { headers: getAuthHeaders() });
+    const promos = await res.json();
+    if (!Array.isArray(promos) || promos.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><i class="fas fa-tags"></i><p>No hay promociones. Crea la primera.</p></div>`;
+      return;
+    }
+    grid.innerHTML = promos.map(p => `
+      <div class="promo-card">
+        <div class="promo-header">
+          <div class="promo-title-wrap">
+            <h4>${(p.title||'').replace(/</g,'&lt;')}</h4>
+            <p>${(p.description||'Sin descripción').replace(/</g,'&lt;')}</p>
+          </div>
+          <span class="promo-code" onclick="copyCode('${p.code}')" title="Clic para copiar">${p.code}</span>
         </div>
-        <span class="promo-code" onclick="copyCode('${p.code}')" title="Clic para copiar">${p.code}</span>
-      </div>
-      <div class="promo-body">
-        <span class="promo-discount">${p.discount}</span>
-        <button class="btn-sm btn-danger" onclick="deletePromo('${p.code}')" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
-      </div>
-    </div>`).join('');
+        <div class="promo-body">
+          <span class="promo-discount">${p.discount}</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sm btn-primary" onclick="sendPromoEmail(${p.id},'${p.code}')" title="Enviar por email a suscriptores">
+              <i class="fas fa-paper-plane"></i> Enviar Email
+            </button>
+            <button class="btn-sm btn-danger" onclick="deletePromo(${p.id},'${p.code}')" title="Eliminar">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-state"><p style="color:#f44336;">Error: ${e.message}</p></div>`;
+  }
 }
-function addPromo() {
-  const title = prompt('Título:'); if(!title) return;
-  const code = prompt('Código (ej: KATTY20):'); if(!code) return;
-  const discount = prompt('Descuento:'); if(!discount) return;
-  const desc = prompt('Descripción (opcional):');
-  
-  const promos = getPromos();
-  if(promos.some(p => p.code.toUpperCase() === code.toUpperCase().trim())) { showToast('⚠️ El código ya existe', 'warning'); return; }
-  
-  promos.push({title, code: code.toUpperCase().trim(), discount, desc, date: new Date().toISOString()});
-  savePromos(promos);
-  renderPromotions();
-  showToast('✅ Promo creada', 'success');
+
+async function addPromo() {
+  const title    = prompt('Título de la promoción:'); if(!title) return;
+  const code     = prompt('Código (ej: KATTY20):');   if(!code)  return;
+  const discount = prompt('Descuento (ej: 20% OFF, RD$500):'); if(!discount) return;
+  const description = prompt('Descripción (opcional):') || '';
+  try {
+    const res  = await fetch(`${API_URL}/api/promotions`, {
+      method: 'POST', headers: getAuthHeaders(),
+      body: JSON.stringify({ title, code, discount, description })
+    });
+    const data = await res.json();
+    if (res.ok) { showToast('✅ Promo creada','success'); renderPromotions(); }
+    else         showToast(`❌ ${data.error}`,'danger');
+  } catch(e) { showToast('❌ Error al crear promo','danger'); }
 }
-function deletePromo(code) {
-  window.confirmActionData = { action: 'delete_promo', code };
+
+async function deletePromo(id, code) {
+  window.confirmActionData = { action:'delete_promo', id, code };
   const msg = document.getElementById('confirmMessage');
   if(msg) msg.textContent = `¿Eliminar promo "${code}"?`;
-  
   const execBtn = document.getElementById('confirmExecuteBtn');
-  if(execBtn){
-      execBtn.className = 'btn-sm btn-danger';
-      execBtn.textContent = 'Eliminar';
-      execBtn.onclick = () => {
-          let promos = getPromos();
-          promos = promos.filter(p=>p.code!==window.confirmActionData.code);
-          savePromos(promos);
-          renderPromotions();
-          showToast('🗑️ Promo eliminada', 'danger');
-          closeConfirm();
-      };
+  if(execBtn) {
+    execBtn.className = 'btn-sm btn-danger';
+    execBtn.textContent = 'Eliminar';
+    execBtn.onclick = async () => {
+      const res = await fetch(`${API_URL}/api/promotions/${window.confirmActionData.id}`, { method:'DELETE', headers: getAuthHeaders() });
+      if (res.ok) { showToast('🗑️ Promo eliminada','danger'); renderPromotions(); }
+      else         showToast('❌ Error al eliminar','danger');
+      closeConfirm();
+    };
   }
-  const dialog = document.getElementById('confirmDialog');
-  if(dialog) dialog.classList.add('open');
+  document.getElementById('confirmDialog').classList.add('open');
 }
+
+async function sendPromoEmail(id, code) {
+  if (!confirm(`¿Enviar la promoción "${code}" por email a TODOS los suscriptores activos?`)) return;
+  showToast('📧 Enviando emails... espera un momento','info');
+  try {
+    const res  = await fetch(`${API_URL}/api/promotions/${id}/send-email`, { method:'POST', headers: getAuthHeaders() });
+    const data = await res.json();
+    if (res.ok) showToast(`✅ ${data.message}`,'success');
+    else         showToast(`❌ ${data.error}`,'danger');
+  } catch(e) { showToast('❌ Error al enviar emails','danger'); }
+}
+
 function copyCode(code) {
-  if(!navigator.clipboard) { showToast('⚠️ Error al copiar', 'danger'); return; }
+  if(!navigator.clipboard) { showToast('⚠️ Error al copiar','danger'); return; }
   navigator.clipboard.writeText(code).then(() => showToast('📋 Código copiado'));
 }
 
-// ===== CONFIGURACIÓN =====
-function saveSettings() {
-  const settingPass = document.getElementById('settingPass');
-  const settingName = document.getElementById('settingName');
-  
-  if(settingName) {
-      // Simulación
-      showToast('⚙️ Nombre actualizado');
+// ===== CONFIGURACIÓN (Supabase) =====
+async function saveSettings() {
+  const fields = {
+    store_name:     document.getElementById('settingName')?.value,
+    store_phone:    document.getElementById('settingPhone')?.value,
+    store_address:  document.getElementById('settingAddress')?.value,
+    store_email:    document.getElementById('settingEmail')?.value,
+    store_hours:    document.getElementById('settingHours')?.value,
+    store_hours_sun:document.getElementById('settingHoursSun')?.value,
+  };
+  const newPass = document.getElementById('settingPass')?.value;
+  if (newPass) {
+    if (newPass.length < 6) { showToast('⚠️ Contraseña mínimo 6 caracteres','warning'); return; }
+    fields.new_password = newPass;
   }
 
-  if (settingPass && settingPass.value) {
-    if (settingPass.value.length < 6) { showToast('⚠️ Contraseña muy corta','warning'); return; }
-    localStorage.setItem('kf_admin_pass', settingPass.value);
-    showToast('🔒 Contraseña actualizada','success');
-    settingPass.value = '';
+  const saveBtn = document.querySelector('[onclick="saveSettings()"]');
+  if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Guardando...'; }
+
+  try {
+    const res = await fetch(`${API_URL}/api/config`, {
+      method: 'PUT', headers: getAuthHeaders(),
+      body: JSON.stringify(fields)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('✅ Configuración guardada en Supabase','success');
+      if (newPass && document.getElementById('settingPass')) document.getElementById('settingPass').value = '';
+    } else {
+      showToast(`❌ Error: ${data.error}`,'danger');
+    }
+  } catch(e) {
+    showToast('❌ Sin conexión al servidor','danger');
   }
-  
-  showToast('✅ Configuración guardada', 'success');
-}
-function resetData() {
-  const msg = document.getElementById('confirmMessage');
-  if(msg) msg.textContent = `¿Restablecer catálogo? Se perderán todos los cambios.`;
-  
-  const execBtn = document.getElementById('confirmExecuteBtn');
-  if(execBtn){
-      execBtn.className = 'btn-sm btn-danger';
-      execBtn.textContent = 'Sí, Restablecer';
-      execBtn.onclick = () => {
-          localStorage.removeItem('kf_products');
-          showToast('🔄 Reiniciando...', 'info');
-          setTimeout(() => location.reload(), 1000);
-      };
-  }
-  const dialog = document.getElementById('confirmDialog');
-  if(dialog) dialog.classList.add('open');
+
+  if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Guardar Cambios'; }
 }
 
 // Restablecer estilos confirm
@@ -1802,8 +1893,8 @@ function updateOrderTracking(orderId, step) {
   if (!step || !orderId) return;
   const API_URL_TRACK = (typeof KF_CONFIG !== 'undefined') ? KF_CONFIG.API_URL : 'http://localhost:3000';
   fetch(`${API_URL_TRACK}/api/orders/${orderId}/tracking`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+  method: 'PUT',
+  headers: getAuthHeaders(),
     body: JSON.stringify({ step, status: step })
   }).then(r => r.json()).then(d => {
     if (d.success) {
