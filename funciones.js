@@ -194,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const phone   = document.getElementById('customerPhone')?.value?.trim();
     const email   = document.getElementById('customerEmail')?.value?.trim() || '';
     const address = document.getElementById('customerAddress')?.value?.trim();
+    const note    = document.getElementById('customerNote')?.value?.trim()   || '';
 
     if (!name || !phone || !address) {
       showToast('⚠️ Completa nombre, teléfono y dirección');
@@ -202,45 +203,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const total = store.cart.reduce((a, i) => a + i.price * i.qty, 0);
 
+    /* Payload completo que el servidor espera */
     const orderPayload = {
       customer_name:    name,
       customer_phone:   phone,
       customer_email:   email,
       customer_address: address,
+      customer_note:    note,
       items_json:       store.cart,
       total,
-      status:           'pending',
-      created_at:       new Date().toISOString(),
-      date:             new Date().toLocaleString('es-DO')
+      payment_method:  'whatsapp',
+      payment_status:  'pending',
+      status:          'confirmed',
+      date:            new Date().toLocaleString('es-DO'),
+      created_at:      new Date().toISOString()
     };
 
-    /* Intentar guardar en backend (no bloquea si falla) */
+    /* 1. Intentar guardar en Railway → Supabase */
+    let savedOrder = null;
     if (API) {
       try {
         const res = await fetch(`${API}/api/orders`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify(orderPayload),
-          signal:  AbortSignal.timeout(6000)
+          signal:  AbortSignal.timeout(7000)
         });
-        if (!res.ok) console.warn('Backend order save failed:', await res.text());
+        if (res.ok) {
+          const data = await res.json();
+          savedOrder = data.order || null;
+          console.log('[KF] Pedido guardado en Supabase:', savedOrder?.tracking_code);
+        } else {
+          console.warn('[KF] Error al guardar pedido en servidor:', res.status);
+        }
       } catch(err) {
-        console.warn('Backend not available, saving locally:', err.message);
+        console.warn('[KF] Backend no disponible, guardando localmente:', err.message);
       }
     }
 
-    /* Siempre guardar localmente como respaldo */
+    /* 2. Guardar en localStorage como respaldo (con datos del servidor si los hay) */
     try {
       const local = JSON.parse(localStorage.getItem('kf_orders') || '[]');
-      local.push({ ...orderPayload, name, phone, email, address });
+      const toSave = savedOrder || { ...orderPayload, id: Date.now() };
+      local.unshift(toSave); /* unshift = más reciente primero */
       localStorage.setItem('kf_orders', JSON.stringify(local));
     } catch(e) {}
 
-    /* Mensaje WhatsApp */
+    /* 3. Construir mensaje de WhatsApp */
+    const trackCode = savedOrder?.tracking_code || '';
     let msg = `🌸 *Nuevo Pedido — Katty Floristería*\n\n`;
+    if (trackCode) msg += `📦 *Código de seguimiento:* ${trackCode}\n`;
     msg += `👤 *Cliente:* ${name}\n📞 *Teléfono:* ${phone}\n`;
-    if (email) msg += `✉️ *Email:* ${email}\n`;
-    msg += `📍 *Dirección:* ${address}\n\n*🛒 Productos:*\n`;
+    if (email)   msg += `✉️ *Email:* ${email}\n`;
+    msg += `📍 *Dirección:* ${address}\n`;
+    if (note)    msg += `📝 *Nota:* ${note}\n`;
+    msg += `\n*🛒 Productos:*\n`;
     store.cart.forEach(i => {
       msg += `• ${i.name} × ${i.qty} = RD$ ${(i.price * i.qty).toLocaleString('es-DO')}\n`;
     });
