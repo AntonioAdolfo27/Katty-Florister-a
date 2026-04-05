@@ -355,60 +355,105 @@
     /* ===== SETTINGS ===== */
     .settings-save-bar { margin-top:24px; display:flex; gap:12px; flex-wrap:wrap; padding-top: 20px; border-top: 1px solid var(--border); }
 
-    /* ===== MEDIA QUERIES PARA RESPONSIVIDAD ===== */
-    
-    /* TABLETS Y PC PEQUEÑAS */
+    /* ===================================================
+       RESPONSIVE — ADMIN PANEL KATTY FLORISTERÍA
+       ≤1024 | ≤768 | ≤600 | ≤480 | ≤360
+       =================================================== */
+
     @media (max-width: 1024px) {
       :root { --sidebar-width: 240px; }
-      .charts-row { grid-template-columns: 1fr; } /* Gráficas una sobre otra */
-      .stat-cards { grid-template-columns: repeat(2, 1fr); } /* Tarjetas 2x2 */
+      .charts-row  { grid-template-columns: 1fr; }
+      .stat-cards  { grid-template-columns: repeat(2, 1fr); }
+      .promo-grid  { grid-template-columns: repeat(2, 1fr); }
     }
 
-    /* MÓVILES GRANDES Y TABLETS RETRATO */
     @media (max-width: 768px) {
       .admin-sidebar {
-        position:fixed; left:0; top:0; height:100vh; z-index:1000;
+        position: fixed; left: 0; top: 0; height: 100vh;
+        width: 280px !important; z-index: 1001;
         transform: translateX(-100%); visibility: hidden;
       }
-      .admin-sidebar.open { transform: translateX(0); visibility: visible; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-      .sidebar-overlay.open { display:block; }
-      
-      .mobile-menu-btn { display:block; }
-      .admin-topbar { padding: 0 20px; }
-      .admin-content { padding: 20px; }
-      
-      .topbar-date { display: none; } /* Ocultar fecha en móvil */
-      
-      .data-table table td, .data-table table th { padding: 12px 15px; }
-      
-      /* Ajustes en modales */
-      .p-img-data { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+      .admin-sidebar.open { transform: translateX(0); visibility: visible; box-shadow: 12px 0 40px rgba(0,0,0,0.7); }
+      .sidebar-overlay.open { display: block; }
+      .mobile-menu-btn  { display: block; }
+      .admin-topbar     { padding: 0 16px; height: 56px; }
+      .admin-topbar h1  { font-size: 15px; }
+      .topbar-date      { display: none; }
+      .topbar-badge     { padding: 5px 10px; font-size: 10px; }
+      .admin-content    { padding: 16px; }
+      .stat-cards       { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .stat-card        { padding: 18px; }
+      .stat-card h3     { font-size: 1.6rem; }
+      .charts-row       { gap: 14px; }
+      .chart-card       { padding: 18px; }
+      .chart-bars       { height: 130px; }
+      .table-wrapper    { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table             { min-width: 520px; }
+      table th, table td { padding: 10px 12px; font-size: 12px; }
+      .table-header     { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+      .table-header-actions { gap: 8px; flex-wrap: wrap; }
+      .table-header-actions .btn-sm { font-size: 11px; padding: 6px 10px; }
+      .modal-box        { padding: 20px; border-radius: 16px; }
+      .p-img-data       { flex-direction: column !important; align-items: flex-start !important; gap: 8px; }
+      .filters-bar      { flex-direction: column; gap: 8px; }
+      .search-input-wrap { width: 100%; min-width: unset; }
+      .filter-select    { width: 100%; min-width: unset; }
+      .filters-bar > .btn-sm { width: 100%; }
     }
 
-    /* MÓVILES PEQUEÑOS */
-    @media (max-width: 480px) {
-      .stat-cards { grid-template-columns: 1fr; } /* Tarjetas una sobre otra */
-      .admin-content { padding: 15px; }
-      .admin-topbar { padding: 0 15px; }
-      .table-header { padding: 12px 15px; }
-      .table-header h3 { font-size: 14px; }
-      .topbar-badge { padding: 5px 10px; font-size: 10px; }
-      
-      .filters-bar { gap: 8px; }
-      .filters-bar .search-input-wrap { order: 1; width: 100%; }
-      .filters-bar .filter-select { order: 2; flex: 1; min-width: 0; }
-      .filters-bar button { order: 3; width: 100%; margin-top: 5px; }
-      
-      .chart-card { padding: 15px; }
-      .chart-bars { gap: 4px; }
-      .chart-bar { max-width: 20px; }
-      .chart-bar-label { font-size: 9px; transform: rotate(-45deg); margin-top: 5px;}
-      .chart-bar-wrap { justify-content: flex-end; height: 180px; padding-bottom: 20px;}
+    @media (max-width: 600px) {
+      .modal-overlay    { padding: 0; align-items: flex-end; }
+      .modal-box        { max-width: 100%; border-radius: 20px 20px 0 0; max-height: 92vh; padding: 20px 16px; }
+      .form-grid        { grid-template-columns: 1fr; gap: 12px; }
+      .modal-actions    { flex-direction: column-reverse; gap: 8px; }
+      .modal-actions button { width: 100%; }
+      .confirm-box      { padding: 20px 16px; }
+      .confirm-btns     { flex-direction: column; }
+      .confirm-btns button { width: 100%; }
+      .promo-grid       { grid-template-columns: 1fr; }
+      .settings-save-bar { flex-direction: column; }
+      .settings-save-bar button { width: 100%; }
+    }
 
-      .activity-item { padding: 10px; gap: 10px; }
-      .activity-icon { width: 30px; height: 30px; font-size: 12px; }
-      
-      .sidebar-brand h2 { font-size: 1.2rem; }
+    @media (max-width: 480px) {
+      .stat-cards       { grid-template-columns: 1fr; gap: 10px; }
+      .stat-card        { padding: 14px; display: flex; align-items: center; gap: 12px; }
+      .stat-card-icon   { font-size: 26px; margin-bottom: 0; flex-shrink: 0; }
+      .stat-card .mini-chart { display: none; }
+      .stat-card .trend { display: none; }
+      .admin-topbar     { padding: 0 12px; height: 52px; }
+      .admin-topbar h1  { font-size: 13px; }
+      .admin-content    { padding: 12px; }
+      .chart-card       { padding: 14px; }
+      .chart-bars       { height: 110px; gap: 3px; }
+      .chart-bar-label  { font-size: 9px; transform: rotate(-40deg); margin-top: 6px; }
+      .chart-bar-val    { font-size: 10px; }
+      table th, table td { padding: 8px 10px; font-size: 11px; }
+      .product-thumb    { width: 30px; height: 30px; }
+      .product-info-cell h3 { font-size: 11px; }
+      .product-info-cell p  { font-size: 10px; }
+      .table-header     { padding: 10px 12px; }
+      .table-header h3  { font-size: 13px; }
+      .activity-item    { padding: 8px 10px; gap: 8px; }
+      .activity-icon    { width: 28px; height: 28px; font-size: 11px; }
+      .activity-info h5 { font-size: 11px; }
+      .activity-info span { font-size: 10px; }
+      .sidebar-brand h2 { font-size: 1.1rem; }
+      .nav-item         { padding: 10px 14px; font-size: 13px; }
+      .login-card       { padding: 24px 16px; border-radius: 16px; }
+      .login-logo       { font-size: 1.5rem; }
+      .toast-container  { right: 8px; left: 8px; top: 8px; }
+      .toast            { padding: 10px 14px; }
+      .toast span       { font-size: 12px; }
+    }
+
+    @media (max-width: 360px) {
+      .admin-topbar  { height: 48px; }
+      .admin-content { padding: 10px; }
+      .stat-card     { padding: 12px; gap: 10px; }
+      .table-header h3 { font-size: 11px; }
+      .nav-item      { padding: 9px 12px; font-size: 12px; }
+      table          { min-width: 460px; }
     }
   </style>
   <script src="config.js"></script>
@@ -561,7 +606,8 @@
         </div>
         <div class="topbar-actions">
           <div class="topbar-badge">
-            <span style="width:7px;height:7px;background:#4caf50;border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span> Tienda Online
+            <span id="serverDot" style="width:7px;height:7px;background:#ff9800;border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span>
+            <span id="serverStatusLabel">Verificando...</span>
           </div>
           <span class="topbar-date" id="topbarDate" style="font-size:12px;color:#666;"></span>
         </div>
@@ -627,7 +673,12 @@
             <div class="table-header">
               <h3>🛍️ Pedidos Recibidos</h3>
               <div class="table-header-actions">
-                <button class="btn-sm btn-ghost" onclick="clearOrders()"><i class="fas fa-trash"></i> Limpiar Vista</button>
+                <button class="btn-sm btn-primary" onclick="syncOrdersFromServer()">
+                  <i class="fas fa-sync"></i> Sincronizar BD
+                </button>
+                <button class="btn-sm btn-ghost" onclick="clearOrders()">
+                  <i class="fas fa-trash"></i> Limpiar Vista
+                </button>
               </div>
             </div>
             <div class="table-wrapper">
@@ -812,7 +863,7 @@ function showSection(name) {
   const renderers = { 
     dashboard: renderDashboard, 
     products: renderProducts, 
-    orders: renderOrders, 
+    orders: () => { syncOrdersFromServer(true); renderOrders(); }, 
     analytics: renderAnalytics, 
     subscribers: renderSubscribers, 
     promotions: renderPromotions 
@@ -864,6 +915,69 @@ function initAdmin() {
       topbarDate.textContent = now.toLocaleDateString('es-DO', options);
   }
   renderDashboard();
+  // Al cargar, sincronizar pedidos Y productos desde Supabase automáticamente
+  syncOrdersFromServer(true);
+  syncProductsFromServer(true);
+  checkServerStatus();
+}
+
+// ===== ESTADO DEL SERVIDOR =====
+async function checkServerStatus() {
+  const dot    = document.getElementById('serverDot');
+  const label  = document.getElementById('serverStatusLabel');
+  try {
+    const res = await fetch(`${API_URL}/api/status`, { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      if (dot)   { dot.style.background = '#4caf50'; }
+      if (label) label.textContent = 'BD Conectada ✅';
+      return;
+    }
+  } catch(e) {}
+  if (dot)   { dot.style.background = '#ff9800'; }
+  if (label) label.textContent = 'Modo Local ⚠️';
+}
+
+// ===== SYNC PEDIDOS DESDE SERVIDOR =====
+async function syncOrdersFromServer(silent = false) {
+  if (!silent) showToast('🔄 Cargando pedidos...', 'info');
+  try {
+    const res = await fetch(`${API_URL}/api/orders`, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('kf_orders', JSON.stringify(data));
+      if (!silent) showToast(`✅ ${data.length} pedido(s) cargados`, 'success');
+      // Re-render si la sección de pedidos está activa
+      const active = document.querySelector('.admin-section.active');
+      if (active) {
+        if (active.id === 'section-orders')    renderOrders();
+        if (active.id === 'section-dashboard') renderDashboard();
+        if (active.id === 'section-analytics') renderAnalytics();
+      }
+      return;
+    }
+  } catch(e) { console.warn('syncOrders:', e.message); }
+  if (!silent) showToast('⚠️ Sin conexión al servidor, mostrando datos locales', 'warning');
+}
+
+// ===== SYNC PRODUCTOS DESDE SERVIDOR =====
+async function syncProductsFromServer(silent = false) {
+  try {
+    const res = await fetch(`${API_URL}/api/products`, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      const data = await res.json();
+      // Agrupar en el formato que usa config.js
+      const grouped = { tipo:[], ocasion:[], premium:[], oferta:[] };
+      data.forEach(p => {
+        const cat = p.category || p._cat || 'tipo';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push({ ...p, desc: p.desc || p.description || '' });
+      });
+      kf_saveProducts(grouped);
+      if (!silent) showToast(`✅ ${data.length} producto(s) sincronizados`, 'success');
+      const active = document.querySelector('.admin-section.active');
+      if (active && active.id === 'section-products') renderProducts();
+    }
+  } catch(e) { console.warn('syncProducts:', e.message); }
 }
 
 // ===== DASHBOARD RENDER =====
@@ -1322,38 +1436,58 @@ function renderOrders() {
   if(!tbody) return;
   
   if (orders.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#444;padding:60px;"><i class="fas fa-shopping-bag" style="font-size:30px; display:block; margin-bottom:10px;"></i>No hay pedidos.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#444;padding:60px;">
+      <i class="fas fa-shopping-bag" style="font-size:30px;display:block;margin-bottom:10px;"></i>
+      No hay pedidos aún.<br>
+      <button onclick="syncOrdersFromServer()" class="btn-sm btn-ghost" style="margin-top:12px;">
+        <i class="fas fa-sync"></i> Cargar desde servidor
+      </button>
+    </td></tr>`;
     return;
   }
-  orders.sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
+  // Ordenar por fecha más reciente primero (created_at o date)
+  orders.sort((a,b) => {
+    const da = a.created_at || a.date || 0;
+    const db = b.created_at || b.date || 0;
+    return new Date(db) - new Date(da);
+  });
 
   const statusMap2 = {
     pending:'⏳ Pendiente', confirmed:'✅ Confirmado', preparing:'🌸 Preparando',
     dispatched:'🚚 En camino', delivered:'🏠 Entregado', cancelled:'❌ Cancelado'
   };
-  const payStatusMap = { paid:'<span style="color:#4caf50;">✅ Pagado</span>', pending:'<span style="color:#ff9800;">⏳ Pendiente</span>', failed:'<span style="color:#f44336;">❌ Fallido</span>' };
-  const payMethodMap = { stripe:'💳 Tarjeta', paypal:'🅿️ PayPal', transfer:'🏦 Banco', whatsapp:'📱 Banco/WA' };
+  const payStatusMap = {
+    paid:     '<span style="color:#4caf50;">✅ Pagado</span>',
+    pending:  '<span style="color:#ff9800;">⏳ Pendiente</span>',
+    failed:   '<span style="color:#f44336;">❌ Fallido</span>',
+    refunded: '<span style="color:#2196f3;">↩️ Reembolso</span>'
+  };
+  const payMethodMap = { stripe:'💳 Tarjeta', paypal:'🅿️ PayPal', transfer:'🏦 Banco', whatsapp:'📱 Banco/WA', pending:'—' };
 
-  tbody.innerHTML = orders.map((o,i)=>`
+  tbody.innerHTML = orders.map((o, i) => `
     <tr>
-      <td style="color:#666;font-size:12px;">${(o.customer_name||o.name||'').replace(/</g,"&lt;")}</td>
+      <td style="color:#555;font-size:11px;">${i + 1}</td>
+      <td style="color:#ddd;font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(o.customer_name||o.name||'').replace(/</g,"&lt;")}</td>
       <td>
-        <span style="font-family:monospace;font-size:12px;color:var(--primary-light);letter-spacing:1px;">${o.tracking_code||'—'}</span>
-        ${o.tracking_code ? `<a href="seguimiento.html?code=${o.tracking_code}" target="_blank" style="margin-left:4px;color:#888;font-size:10px;">↗</a>` : ''}
+        <span style="font-family:monospace;font-size:11px;color:var(--primary-light);letter-spacing:1px;">${o.tracking_code||'—'}</span>
+        ${o.tracking_code ? `<a href="seguimiento.html?code=${o.tracking_code}" target="_blank" style="margin-left:4px;color:#888;font-size:10px;" title="Ver seguimiento">↗</a>` : ''}
       </td>
-      <td style="font-weight:600;color:var(--primary-light)">RD$ ${Number(o.total||0).toLocaleString('es-DO')}</td>
+      <td style="font-weight:600;color:var(--primary-light);">RD$ ${Number(o.total||0).toLocaleString('es-DO')}</td>
       <td>
         <div>${payStatusMap[o.payment_status]||'—'}</div>
-        <div style="font-size:11px;color:#666;">${payMethodMap[o.payment_method]||'—'}</div>
+        <div style="font-size:10px;color:#666;">${payMethodMap[o.payment_method]||'—'}</div>
       </td>
-      <td><span style="font-size:12px;">${statusMap2[o.status]||o.status||'—'}</span></td>
-      <td style="font-size:12px;color:#aaa;">${o.created_at ? new Date(o.created_at).toLocaleDateString('es-DO') : (o.date||'—')}</td>
+      <td><span style="font-size:11px;">${statusMap2[o.status]||o.status||'—'}</span></td>
+      <td style="font-size:11px;color:#aaa;">${o.created_at ? new Date(o.created_at).toLocaleDateString('es-DO') : (o.date||'—')}</td>
       <td>
-        <select onchange="updateOrderTracking('${o.id}',this.value)" style="background:var(--dark-3);border:1px solid var(--border);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;" title="Actualizar estado">
-          <option value="">Estado</option>
+        <select onchange="updateOrderTracking('${o.id}',this.value)"
+                style="background:var(--dark-3);border:1px solid var(--border);color:#fff;padding:4px 6px;border-radius:6px;font-size:11px;cursor:pointer;min-width:110px;"
+                title="Actualizar estado">
+          <option value="">Cambiar estado</option>
           <option value="preparing">🌸 Preparando</option>
           <option value="dispatched">🚚 Despachar</option>
           <option value="delivered">🏠 Entregado</option>
+          <option value="cancelled">❌ Cancelar</option>
         </select>
       </td>
     </tr>`).join('');
@@ -1670,13 +1804,20 @@ function updateOrderTracking(orderId, step) {
   fetch(`${API_URL_TRACK}/api/orders/${orderId}/tracking`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ step })
+    body: JSON.stringify({ step, status: step })
   }).then(r => r.json()).then(d => {
     if (d.success) {
       showToast('✅ Estado actualizado: ' + step, 'success');
+      // Actualizar también en localStorage para reflejar de inmediato
+      try {
+        let orders = JSON.parse(localStorage.getItem('kf_orders') || '[]');
+        const idx = orders.findIndex(o => String(o.id) === String(orderId));
+        if (idx > -1) { orders[idx].status = step; localStorage.setItem('kf_orders', JSON.stringify(orders)); }
+      } catch(e) {}
       renderOrders();
+      renderDashboard();
     } else {
-      // Update in localStorage too (fallback)
+      // Fallback: actualizar localmente
       try {
         let orders = JSON.parse(localStorage.getItem('kf_orders') || '[]');
         const idx = orders.findIndex(o => String(o.id) === String(orderId));
@@ -1692,8 +1833,14 @@ function updateOrderTracking(orderId, step) {
       renderOrders();
     }
   }).catch(e => {
-    console.warn('Backend error, updating locally');
-    showToast('⚠️ Actualizado localmente (backend no disponible)');
+    // Sin internet: actualizar solo en localStorage
+    try {
+      let orders = JSON.parse(localStorage.getItem('kf_orders') || '[]');
+      const idx = orders.findIndex(o => String(o.id) === String(orderId));
+      if (idx > -1) { orders[idx].status = step; localStorage.setItem('kf_orders', JSON.stringify(orders)); }
+    } catch(err) {}
+    showToast('⚠️ Actualizado localmente (sin conexión)', 'warning');
+    renderOrders();
   });
 }
 
