@@ -36,6 +36,17 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 console.log('✅  Supabase conectado.');
 
+// Cliente con SERVICE ROLE KEY para operaciones de Storage (upload de imágenes)
+// La service key bypasea RLS y permite subir archivos sin restricciones
+const supabaseAdmin = process.env.SUPABASE_SERVICE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : supabase; // fallback al cliente normal si no está configurada
+if (process.env.SUPABASE_SERVICE_KEY) {
+  console.log('✅  Supabase Admin (service key) listo para Storage.');
+} else {
+  console.warn('⚠️   SUPABASE_SERVICE_KEY no definida — usando anon key para Storage (puede fallar).');
+}
+
 // ── Nodemailer (email) ───────────────────────────────────────
 let mailTransporter = null;
 try {
@@ -639,11 +650,15 @@ app.post('/api/upload', requireAdmin, async (req, res) => {
     const raw      = base64.includes(';base64,') ? base64.split(';base64,').pop() : base64;
     const buffer   = Buffer.from(raw, 'base64');
     const filePath = `${Date.now()}-${name.replace(/[^a-z0-9._-]/gi,'_').toLowerCase()}`;
-    const { error } = await supabase.storage.from(BUCKET).upload(filePath, buffer, { contentType: type, upsert: false });
+    // Usar supabaseAdmin (service key) para bypass RLS en Storage
+    const { error } = await supabaseAdmin.storage.from(BUCKET).upload(filePath, buffer, { contentType: type, upsert: true });
     if (error) throw new Error(error.message);
-    const { data } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+    const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filePath);
     return res.json({ success: true, publicUrl: data.publicUrl });
-  } catch(err) { return res.status(500).json({ error: err.message }); }
+  } catch(err) {
+    console.error('Upload error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // =============================================================
