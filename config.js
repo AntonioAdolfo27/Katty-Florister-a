@@ -66,9 +66,31 @@ function kf_getProducts() {
 }
 
 function kf_saveProducts(p) {
-  localStorage.setItem('kf_products', JSON.stringify(p));
-  // Disparar evento para que otras páginas (abiertas en otras pestañas) se actualicen
-  try { localStorage.setItem('kf_products_ts', Date.now()); } catch(e) {}
+  try {
+    // Antes de guardar, reemplazar imágenes base64 grandes por placeholder
+    // para evitar QuotaExceededError en localStorage
+    const clean = JSON.parse(JSON.stringify(p));
+    ['tipo','ocasion','premium','oferta'].forEach(cat => {
+      (clean[cat] || []).forEach(prod => {
+        if (prod.img && prod.img.startsWith('data:') && prod.img.length > 2000) {
+          prod.img = 'https://placehold.co/400x300/1a1a22/ff4081?text=Ver+Admin';
+        }
+      });
+    });
+    localStorage.setItem('kf_products', JSON.stringify(clean));
+    try { localStorage.setItem('kf_products_ts', Date.now()); } catch(e) {}
+  } catch(e) {
+    // Si aún así falla (localStorage muy lleno), limpiar y reintentar
+    console.warn('localStorage lleno, limpiando caché...', e.message);
+    try {
+      localStorage.removeItem('kf_products');
+      localStorage.removeItem('kf_analytics');
+      localStorage.removeItem('kf_orders');
+      localStorage.setItem('kf_products', JSON.stringify(p));
+    } catch(e2) {
+      console.error('No se pudo guardar en localStorage:', e2.message);
+    }
+  }
 }
 
 function kf_getAllProductsFlat() {
