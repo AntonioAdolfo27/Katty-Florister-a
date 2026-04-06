@@ -36,15 +36,14 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 console.log('✅  Supabase conectado.');
 
-// Cliente con SERVICE ROLE KEY para operaciones de Storage (upload de imágenes)
-// La service key bypasea RLS y permite subir archivos sin restricciones
+// Cliente admin con SERVICE ROLE KEY para uploads de imágenes (bypass RLS)
 const supabaseAdmin = process.env.SUPABASE_SERVICE_KEY
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-  : supabase; // fallback al cliente normal si no está configurada
+  : supabase;
 if (process.env.SUPABASE_SERVICE_KEY) {
-  console.log('✅  Supabase Admin (service key) listo para Storage.');
+  console.log('✅  Supabase Admin listo para Storage.');
 } else {
-  console.warn('⚠️   SUPABASE_SERVICE_KEY no definida — usando anon key para Storage (puede fallar).');
+  console.warn('⚠️   SUPABASE_SERVICE_KEY no definida — uploads pueden fallar.');
 }
 
 // ── Nodemailer (email) ───────────────────────────────────────
@@ -560,12 +559,15 @@ app.get('/api/orders', requireAdmin, async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     let orderData = { ...req.body };
+    // Eliminar id para que Supabase lo genere automáticamente (SERIAL)
+    delete orderData.id;
     if (typeof orderData.items_json === 'string') { try { orderData.items_json = JSON.parse(orderData.items_json); } catch(e) {} }
     if (!orderData.created_at)        orderData.created_at        = new Date().toISOString();
     if (!orderData.tracking_code)     orderData.tracking_code     = generateTrackingCode();
     if (!orderData.estimated_delivery)orderData.estimated_delivery= getEstimatedDelivery();
     if (!orderData.tracking_steps)    orderData.tracking_steps    = defaultTrackingSteps(orderData.created_at);
     if (!orderData.payment_status)    orderData.payment_status    = 'pending';
+    if (!orderData.status)            orderData.status            = 'pending';
     const { data, error } = await supabase.from('orders').insert([orderData]).select();
     if (error) throw error;
     return res.status(201).json({ success: true, order: data[0] });
@@ -650,15 +652,11 @@ app.post('/api/upload', requireAdmin, async (req, res) => {
     const raw      = base64.includes(';base64,') ? base64.split(';base64,').pop() : base64;
     const buffer   = Buffer.from(raw, 'base64');
     const filePath = `${Date.now()}-${name.replace(/[^a-z0-9._-]/gi,'_').toLowerCase()}`;
-    // Usar supabaseAdmin (service key) para bypass RLS en Storage
     const { error } = await supabaseAdmin.storage.from(BUCKET).upload(filePath, buffer, { contentType: type, upsert: true });
     if (error) throw new Error(error.message);
     const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filePath);
     return res.json({ success: true, publicUrl: data.publicUrl });
-  } catch(err) {
-    console.error('Upload error:', err.message);
-    return res.status(500).json({ error: err.message });
-  }
+  } catch(err) { return res.status(500).json({ error: err.message }); }
 });
 
 // =============================================================
