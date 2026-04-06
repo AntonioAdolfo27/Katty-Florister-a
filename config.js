@@ -6,15 +6,22 @@
    ============================================================= */
 
 const KF_CONFIG = (() => {
-  const host = window.location.hostname;
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '';
-  const API_URL = isLocal ? 'http://localhost:3000' : window.location.origin;
+  // URL única de tu servidor en Railway
+  const PROD_URL = 'https://katty-florister-a-production.up.railway.app';
+  
+  // Detectamos si estamos trabajando en tu computadora (desarrollo)
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  // Si es local, usa localhost. Si no, usa SIEMPRE la URL de Railway.
+  const API_URL = isLocal ? 'http://localhost:3000' : PROD_URL;
+
   return {
     API_URL,
     WA_NUMBER: '18294317622',
     STORE_NAME: 'Katty Floristería'
   };
 })();
+
 
 /* ── PRODUCTOS POR DEFECTO ──────────────────────────────────
    Admin guarda en localStorage['kf_products'].
