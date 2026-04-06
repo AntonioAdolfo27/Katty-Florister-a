@@ -2,7 +2,7 @@
    KATTY FLORISTERÍA — config.js  v5.0
    Detecta automáticamente local vs producción.
    Funciona como capa de datos compartida entre
-   index.html, catalogo.html y admin.html
+   index.html catalogo.html y admin.html
    ============================================================= */
 
 const KF_CONFIG = (() => {
