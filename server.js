@@ -602,10 +602,11 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', requireAdmin, async (req, res) => {
   try {
-    const { name, price, category, desc, badge, status, img } = req.body;
+    const { name, price, category, desc, description, badge, status, img } = req.body;
+    const prodDesc = description || desc || '';
     if (!name || !price || !category) return res.status(400).json({ error: 'Faltan campos' });
     const { data, error } = await supabase.from('products')
-      .insert([{ name, price: parseFloat(price), category, desc, badge, status: status || 'active', img }]).select();
+      .insert([{ name, price: parseFloat(price), category, description: prodDesc, badge, status: status || 'active', img }]).select();
     if (error) throw error;
     return res.status(201).json({ success: true, product: data[0] });
   } catch(err) { return res.status(500).json({ error: err.message }); }
