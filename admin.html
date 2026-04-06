@@ -1016,7 +1016,7 @@ async function syncProductsFromServer(silent = false) {
       data.forEach(p => {
         const cat = p.category || p._cat || 'tipo';
         if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push({ ...p, desc: p.desc || p.description || '' });
+        grouped[cat].push({ ...p, desc: p.description || p.desc || '' });
       });
       kf_saveProducts(grouped);
       if (!silent) showToast(`✅ ${data.length} producto(s) sincronizados`, 'success');
@@ -1390,7 +1390,7 @@ async function saveProduct() {
     
     if (!finalImgUrl) finalImgUrl = 'https://placehold.co/400x400/1a1a22/ff4081?text=Katty+Flor';
 
-    const productData = { name, price, img: finalImgUrl, desc, badge, status, category: cat };
+    const productData = { name, price, img: finalImgUrl, description: desc, badge, status, category: cat };
 
     if (editingId) {
       // UPDATE en Supabase
