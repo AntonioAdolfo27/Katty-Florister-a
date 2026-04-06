@@ -276,7 +276,7 @@
         <ul>
           <li><a href="tel:+18294317622">📞 829-431-7622</a></li>
           <li><a href="https://wa.me/18294317622" target="_blank">💬 WhatsApp</a></li>
-          <li><a href="mailto:info@kattyfloreria.com">✉️ Email</a></li>
+          <li><a href="/cdn-cgi/l/email-protection#4c25222a230c272d3838352a20233e293e252d622f2321">✉️ Email</a></li>
           <li><a href="index.html#contactos">📍 Ver mapa</a></li>
         </ul>
       </div>
@@ -379,7 +379,7 @@
   </div>
 </div>
 
-<script src="funciones.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="funciones.js"></script>
 <script>
 function goToPayment() {
   const cart = JSON.parse(localStorage.getItem('kf_cart') || '[]');
@@ -470,10 +470,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Escuchar cambios del admin (cuando guarda productos en otra pestaña)
   window.addEventListener('storage', e => {
-    if (e.key === 'kf_products' || e.key === 'kf_products_ts') {
-      catRenderAll();
-    }
+    if (e.key === 'kf_products' || e.key === 'kf_products_ts') catRenderAll();
   });
+
+  // Cargar productos frescos desde Supabase al abrir el catálogo
+  const API = (typeof KF_CONFIG !== 'undefined') ? KF_CONFIG.API_URL : window.location.origin;
+  fetch(`${API}/api/products`, { signal: AbortSignal.timeout(8000) })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || data.length === 0) return;
+      const grouped = { tipo:[], ocasion:[], premium:[], oferta:[] };
+      data.forEach(p => {
+        const cat = p.category || 'tipo';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push({ ...p, desc: p.desc || p.description || '' });
+      });
+      if (typeof kf_saveProducts === 'function') kf_saveProducts(grouped);
+      catRenderAll(); // re-render con datos frescos de Supabase
+    })
+    .catch(() => {}); // si falla, usa los datos del localStorage
 });
 </script>
 </body>
