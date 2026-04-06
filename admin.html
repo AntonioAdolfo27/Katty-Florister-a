@@ -1297,8 +1297,10 @@ function openAddProduct() {
 }
 
 function openEditProduct(id) {
-  const p = getAllProducts().find(x=>x.id===id);
-  if (!p) return;
+  // Fix: comparar como string porque Supabase SERIAL devuelve número
+  id = String(id);
+  const p = getAllProducts().find(x=> String(x.id) === id);
+  if (!p) { console.warn("No encontrado id:", id); return; }
   editingId = id;
   
   const title = document.getElementById('productModalTitle');
