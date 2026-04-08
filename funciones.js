@@ -425,6 +425,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const ab = $('qvAddBtn');
     if (ab) { ab.dataset.id = id; ab.dataset.name = name; ab.dataset.price = price; }
     $('quickViewModal')?.classList.add('open');
+    // Registrar vista del producto en Supabase
+    fetch(API + '/api/analytics/product-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: id, product_name: name })
+    }).catch(() => {});
   }
 
   document.getElementById('closeQuickView')?.addEventListener('click', () =>
@@ -587,6 +593,13 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('⚠️ Ingresa un email válido');
       return;
     }
+    // Guardar en Supabase via API del servidor
+    fetch(API + '/api/subscribers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: v, source: 'web' })
+    }).catch(() => {});
+    // También guardar local como respaldo
     try {
       const subs = JSON.parse(localStorage.getItem('kf_subscribers') || '[]');
       if (!subs.find(s => (s.email || s) === v)) {
@@ -610,6 +623,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ═══ ANALYTICS LOCAL ═════════════════════════════════════════ */
   function trackEvent(event, data = {}) {
+    // Guardar en Supabase via API (fire & forget)
+    fetch(API + '/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, data })
+    }).catch(() => {});
+    // También guardar local como respaldo
     try {
       const s = JSON.parse(localStorage.getItem('kf_analytics') || '{"visits":0,"clicks":{},"products":{},"events":[],"daily":{}}');
       if (!s.events) s.events = [];
@@ -620,8 +640,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
   }
 
-  /* Registrar visita de página */
+  /* Registrar visita de página — guarda en Supabase Y localStorage */
   (function() {
+    // Enviar visita al servidor (Supabase)
+    fetch(API + '/api/analytics/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: window.location.pathname })
+    }).catch(() => {});
+    // También guardar local
     try {
       const s = JSON.parse(localStorage.getItem('kf_analytics') || '{"visits":0,"daily":{}}');
       s.visits = (s.visits || 0) + 1;
