@@ -4,8 +4,6 @@
 // y envío de email masivo a suscriptores.
 // =============================================================
 
-
-
 require('dotenv').config();
 const express   = require('express');
 const cors      = require('cors');
@@ -37,16 +35,6 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
 }
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 console.log('✅  Supabase conectado.');
-
-// Cliente admin con SERVICE ROLE KEY para uploads de imágenes (bypass RLS)
-const supabaseAdmin = process.env.SUPABASE_SERVICE_KEY
-  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-  : supabase;
-if (process.env.SUPABASE_SERVICE_KEY) {
-  console.log('✅  Supabase Admin listo para Storage.');
-} else {
-  console.warn('⚠️   SUPABASE_SERVICE_KEY no definida — uploads pueden fallar.');
-}
 
 // ── Nodemailer (email) ───────────────────────────────────────
 let mailTransporter = null;
@@ -561,15 +549,12 @@ app.get('/api/orders', requireAdmin, async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     let orderData = { ...req.body };
-    // Eliminar id para que Supabase lo genere automáticamente (SERIAL)
-    delete orderData.id;
     if (typeof orderData.items_json === 'string') { try { orderData.items_json = JSON.parse(orderData.items_json); } catch(e) {} }
     if (!orderData.created_at)        orderData.created_at        = new Date().toISOString();
     if (!orderData.tracking_code)     orderData.tracking_code     = generateTrackingCode();
     if (!orderData.estimated_delivery)orderData.estimated_delivery= getEstimatedDelivery();
     if (!orderData.tracking_steps)    orderData.tracking_steps    = defaultTrackingSteps(orderData.created_at);
     if (!orderData.payment_status)    orderData.payment_status    = 'pending';
-    if (!orderData.status)            orderData.status            = 'pending';
     const { data, error } = await supabase.from('orders').insert([orderData]).select();
     if (error) throw error;
     return res.status(201).json({ success: true, order: data[0] });
@@ -654,9 +639,9 @@ app.post('/api/upload', requireAdmin, async (req, res) => {
     const raw      = base64.includes(';base64,') ? base64.split(';base64,').pop() : base64;
     const buffer   = Buffer.from(raw, 'base64');
     const filePath = `${Date.now()}-${name.replace(/[^a-z0-9._-]/gi,'_').toLowerCase()}`;
-    const { error } = await supabaseAdmin.storage.from(BUCKET).upload(filePath, buffer, { contentType: type, upsert: true });
+    const { error } = await supabase.storage.from(BUCKET).upload(filePath, buffer, { contentType: type, upsert: false });
     if (error) throw new Error(error.message);
-    const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filePath);
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
     return res.json({ success: true, publicUrl: data.publicUrl });
   } catch(err) { return res.status(500).json({ error: err.message }); }
 });
@@ -674,6 +659,117 @@ app.get('/api/payment-config', (req, res) => {
 
 app.get('/api/status', (req, res) => {
   res.json({ status: 'online', version: '7.0', stripe: !!stripe, paypal: !!(process.env.PAYPAL_CLIENT_ID) });
+});
+
+
+// =============================================================
+// ANALYTICS — Visitas, Eventos y Productos más vistos
+// =============================================================
+
+// POST /api/analytics/visit — registrar visita de página
+app.post('/api/analytics/visit', async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const page  = req.body.page || 'index';
+    // Upsert: incrementar contador del día
+    const { data: existing } = await supabase
+      .from('analytics_visits')
+      .select('id, count')
+      .eq('date', today)
+      .single();
+    if (existing) {
+      await supabase.from('analytics_visits')
+        .update({ count: existing.count + 1, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+    } else {
+      await supabase.from('analytics_visits')
+        .insert([{ date: today, count: 1 }]);
+    }
+    return res.json({ success: true });
+  } catch(err) {
+    // No bloquear la página si falla analytics
+    return res.json({ success: false });
+  }
+});
+
+// POST /api/analytics/event — registrar evento (carrito, chatbot, etc.)
+app.post('/api/analytics/event', async (req, res) => {
+  try {
+    const { event, data = {} } = req.body;
+    if (!event) return res.json({ success: false });
+    await supabase.from('analytics_events')
+      .insert([{ event, data: JSON.stringify(data), created_at: new Date().toISOString() }]);
+    return res.json({ success: true });
+  } catch(err) {
+    return res.json({ success: false });
+  }
+});
+
+// POST /api/analytics/product-view — registrar vista de producto
+app.post('/api/analytics/product-view', async (req, res) => {
+  try {
+    const { product_id, product_name } = req.body;
+    if (!product_id) return res.json({ success: false });
+    const { data: existing } = await supabase
+      .from('analytics_product_views')
+      .select('id, count')
+      .eq('product_id', String(product_id))
+      .single();
+    if (existing) {
+      await supabase.from('analytics_product_views')
+        .update({ count: existing.count + 1 })
+        .eq('id', existing.id);
+    } else {
+      await supabase.from('analytics_product_views')
+        .insert([{ product_id: String(product_id), product_name: product_name || '', count: 1 }]);
+    }
+    return res.json({ success: true });
+  } catch(err) {
+    return res.json({ success: false });
+  }
+});
+
+// GET /api/analytics/summary — resumen para el admin
+app.get('/api/analytics/summary', requireAdmin, async (req, res) => {
+  try {
+    // Visitas diarias (últimos 30 días)
+    const { data: visits } = await supabase
+      .from('analytics_visits')
+      .select('date, count')
+      .order('date', { ascending: false })
+      .limit(30);
+
+    // Eventos agrupados (conteo por tipo)
+    const { data: events } = await supabase
+      .from('analytics_events')
+      .select('event')
+      .order('created_at', { ascending: false })
+      .limit(1000);
+
+    const eventCounts = {};
+    (events || []).forEach(e => {
+      eventCounts[e.event] = (eventCounts[e.event] || 0) + 1;
+    });
+
+    // Total visitas
+    const totalVisits = (visits || []).reduce((a, v) => a + (v.count || 0), 0);
+
+    // Productos más vistos
+    const { data: topProducts } = await supabase
+      .from('analytics_product_views')
+      .select('product_id, product_name, count')
+      .order('count', { ascending: false })
+      .limit(8);
+
+    return res.json({
+      visits: visits || [],
+      totalVisits,
+      events: eventCounts,
+      topProducts: topProducts || []
+    });
+  } catch(err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Fallback SPA ────────────────────────────────────────────
