@@ -78,7 +78,6 @@
       .confirm-box { padding: 20px; }
       .confirm-btns button { width: 100%; }
     }
-    
 
     /* ===== FORM MODAL (Responsivo) ===== */
     .modal-overlay {
@@ -953,6 +952,23 @@ function getAnalytics() {
   }
 }
 
+// ===== CARGA ANALYTICS DESDE SUPABASE =====
+let _analyticsCache = null;
+
+async function loadAnalyticsFromServer() {
+  try {
+    const res = await fetch(`${API_URL}/api/analytics/summary`, {
+      headers: getAuthHeaders(),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (res.ok) {
+      _analyticsCache = await res.json();
+      return _analyticsCache;
+    }
+  } catch(e) { console.warn('analytics load:', e.message); }
+  return null;
+}
+
 // ===== INICIALIZACIÓN =====
 function initAdmin() {
   const topbarDate = document.getElementById('topbarDate');
@@ -1028,11 +1044,33 @@ async function syncProductsFromServer(silent = false) {
 }
 
 // ===== DASHBOARD RENDER =====
-function renderDashboard() {
-  const stats = getAnalytics();
+async function renderDashboard() {
+  const localStats = getAnalytics();
   const products = getAllProducts();
-  const orders = JSON.parse(localStorage.getItem('kf_orders') || '[]');
-  const subs = JSON.parse(localStorage.getItem('kf_subscribers') || '[]');
+  // Cargar pedidos desde servidor
+  let orders = [];
+  try {
+    const ro = await fetch(`${API_URL}/api/orders`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(6000) });
+    if (ro.ok) { orders = await ro.json(); localStorage.setItem('kf_orders', JSON.stringify(orders)); }
+    else orders = JSON.parse(localStorage.getItem('kf_orders') || '[]');
+  } catch(e) { orders = JSON.parse(localStorage.getItem('kf_orders') || '[]'); }
+
+  // Cargar suscriptores desde servidor
+  let subsCount = 0;
+  try {
+    const rs = await fetch(`${API_URL}/api/subscribers`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(6000) });
+    if (rs.ok) { const subsData = await rs.json(); subsCount = subsData.length; }
+  } catch(e) { subsCount = JSON.parse(localStorage.getItem('kf_subscribers') || '[]').length; }
+
+  // Cargar visitas desde servidor
+  let serverVisits = [];
+  let totalServerVisits = 0;
+  try {
+    const rv = await fetch(`${API_URL}/api/analytics/summary`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(6000) });
+    if (rv.ok) { const vd = await rv.json(); serverVisits = vd.visits || []; totalServerVisits = vd.totalVisits || 0; }
+  } catch(e) {}
+
+  const totalVisits = totalServerVisits || localStats.visits || 0;
 
   // 1. Stat Cards
   const generateMiniBarChart = () => Array.from({length: 10}, () => Math.floor(Math.random() * 80) + 20).map(h => `<div class="mini-bar" style="--h: ${h}%"></div>`).join('');
@@ -1043,7 +1081,7 @@ function renderDashboard() {
         <div class="stat-card pink">
           <div class="stat-card-icon">👀</div>
           <p>Visitas totales</p>
-          <h3>${stats.visits || 0}</h3>
+          <h3>${totalVisits}</h3>
           <div class="trend up"><i class="fas fa-level-up-alt"></i> Tiempo real</div>
           <div class="mini-chart">${generateMiniBarChart()}</div>
         </div>
@@ -1063,20 +1101,23 @@ function renderDashboard() {
         <div class="stat-card orange">
           <div class="stat-card-icon">📧</div>
           <p>Suscriptores Newsletter</p>
-          <h3>${subs.length}</h3>
+          <h3>${subsCount}</h3>
           <div class="mini-chart">${generateMiniBarChart()}</div>
         </div>
       `;
   }
 
-  // 2. Visitas Chart
+  // 2. Visitas Chart — usar datos del servidor si disponibles
   const daysShort = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const today = new Date();
   const chartData = Array.from({length:7},(_,i)=>{
     const d = new Date(today); d.setDate(d.getDate()-6+i);
-    const key = d.toLocaleDateString('es-DO');
-    const val = stats.daily?.[key] || 0;
-    return { day:daysShort[d.getDay()], val: val };
+    const isoDate = d.toISOString().split('T')[0]; // YYYY-MM-DD
+    const localKey = d.toLocaleDateString('es-DO');
+    // Buscar en datos del servidor primero
+    const serverEntry = serverVisits.find(v => v.date === isoDate);
+    const val = serverEntry ? serverEntry.count : (localStats.daily?.[localKey] || 0);
+    return { day: daysShort[d.getDay()], val };
   });
   
   // CORRECCIÓN: Evitar división por cero si maxVal es 0
@@ -1298,10 +1339,8 @@ function openAddProduct() {
 }
 
 function openEditProduct(id) {
-  // Fix: comparar como string porque Supabase SERIAL devuelve número
-  id = String(id);
-  const p = getAllProducts().find(x=> String(x.id) === id);
-  if (!p) { console.warn("No encontrado id:", id); return; }
+  const p = getAllProducts().find(x=>x.id===id);
+  if (!p) return;
   editingId = id;
   
   const title = document.getElementById('productModalTitle');
@@ -1572,13 +1611,21 @@ function clearOrders() {
 }
 
 // ===== ANALYTICS =====
-function renderAnalytics() {
-  const stats = getAnalytics();
+async function renderAnalytics() {
+  // Cargar desde Supabase primero
+  const serverData = await loadAnalyticsFromServer();
+  // Combinar con localStorage como respaldo
+  const localStats = getAnalytics();
   let orders = [];
   try { orders = JSON.parse(localStorage.getItem('kf_orders') || '[]'); } catch(e){}
   
   const totalRevenue = orders.reduce((a,o)=>a+(o.total||0),0);
   const avgOrder = orders.length ? totalRevenue / orders.length : 0;
+  
+  // Usar datos del servidor si están disponibles, si no usar local
+  const totalVisits = serverData ? serverData.totalVisits : (localStats.visits || 0);
+  const eventCounts = serverData ? serverData.events : (localStats.clicks || {});
+  const topProductsServer = serverData ? serverData.topProducts : [];
 
   const analyticsCards = document.getElementById('analyticsCards');
   if(analyticsCards){
@@ -1586,7 +1633,7 @@ function renderAnalytics() {
         <div class="stat-card pink">
           <div class="stat-card-icon">📈</div>
           <p>Total Visitas (KPI)</p>
-          <h3>${stats.visits||0}</h3>
+          <h3>${totalVisits}</h3>
         </div>
         <div class="stat-card green">
           <div class="stat-card-icon">💰</div>
@@ -1597,46 +1644,48 @@ function renderAnalytics() {
         <div class="stat-card blue">
           <div class="stat-card-icon">🛒</div>
           <p>Intenciones de Compra</p>
-          <h3>${stats.clicks?.['add_to_cart']||0}</h3>
+          <h3>${eventCounts['add_to_cart']||0}</h3>
         </div>
         <div class="stat-card orange">
           <div class="stat-card-icon">💬</div>
           <p>Soporte Chatbot</p>
-          <h3>${stats.clicks?.['chatbot_open']||0}</h3>
+          <h3>${eventCounts['chatbot_open']||0}</h3>
         </div>
       `;
   }
 
-  const prods = stats.products||{};
-  const sortedProds = Object.entries(prods).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxProd = Math.max(...sortedProds.map(p=>p[1]),1);
-  const productsList = getAllProducts();
+  // Usar datos del servidor para productos más vistos
+  const finalTopProducts = topProductsServer.length > 0
+    ? topProductsServer
+    : (() => {
+        const prods = localStats.products||{};
+        return Object.entries(prods).sort((a,b)=>b[1]-a[1]).slice(0,8)
+          .map(([id, count]) => ({ product_id: id, product_name: id, count }));
+      })();
+  const maxProd = Math.max(...finalTopProducts.map(p=>p.count||0), 1);
 
   const productHitsChart = document.getElementById('productHitsChart');
   if(productHitsChart){
-      productHitsChart.innerHTML = sortedProds.length ?
-        sortedProds.map(([id, val])=>{
-          const pInfo = productsList.find(p => p.id === id) || {name: 'Producto eliminado'};
-          return `
+      productHitsChart.innerHTML = finalTopProducts.length ?
+        finalTopProducts.map(p => `
           <div style="background:rgba(255,255,255,0.01); padding:10px; border-radius:8px; border:1px solid var(--border);">
             <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px; gap: 10px;">
-              <span style="color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; flex:1;">${pInfo.name}</span>
-              <span style="color:var(--primary-light);font-weight:600; flex-shrink:0;">${val} <i class="fas fa-eye"></i></span>
+              <span style="color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; flex:1;">${p.product_name || p.product_id}</span>
+              <span style="color:var(--primary-light);font-weight:600; flex-shrink:0;">${p.count} <i class="fas fa-eye"></i></span>
             </div>
             <div style="width:100%;background:rgba(255,255,255,0.05);height:5px;border-radius:3px;overflow:hidden;">
-              <div style="height:100%;background:var(--primary);width:${(val/maxProd)*100}%"></div>
+              <div style="height:100%;background:var(--primary);width:${((p.count||0)/maxProd)*100}%"></div>
             </div>
-          </div>`;
-        }).join('') : '<div class="empty-state"><p>Sin datos.</p></div>';
+          </div>`
+        ).join('') : '<div class="empty-state"><p>Sin datos.</p></div>';
   }
 
-  const clicks = stats.clicks || {};
   const actionsData = [
-    { label: 'Clic WhatsApp Directo', val: clicks.ws_direct || 0, icon: 'fab fa-whatsapp', color: '#4caf50' },
-    { label: 'Añadido al Carrito', val: clicks.add_to_cart || 0, icon: 'fas fa-shopping-cart', color: 'var(--primary-light)' },
-    { label: 'Checkout Iniciado', val: clicks.checkout_start || 0, icon: 'fas fa-cash-register', color: '#2196f3' },
-    { label: 'Consultas Chatbot', val: clicks.chatbot_open || 0, icon: 'fas fa-comments', color: '#9c27b0' },
-    { label: 'Suscripción News', val: clicks.newsletter_subscribe || 0, icon: 'fas fa-envelope', color: '#ff9800' }
+    { label: 'Clic WhatsApp Directo', val: eventCounts['ws_direct'] || 0, icon: 'fab fa-whatsapp', color: '#4caf50' },
+    { label: 'Añadido al Carrito', val: eventCounts['add_to_cart'] || 0, icon: 'fas fa-shopping-cart', color: 'var(--primary-light)' },
+    { label: 'Checkout Iniciado', val: eventCounts['checkout_start'] || 0, icon: 'fas fa-cash-register', color: '#2196f3' },
+    { label: 'Consultas Chatbot', val: eventCounts['chatbot_open'] || 0, icon: 'fas fa-comments', color: '#9c27b0' },
+    { label: 'Suscripción News', val: eventCounts['newsletter_subscribe'] || 0, icon: 'fas fa-envelope', color: '#ff9800' }
   ];
   const maxAction = Math.max(...actionsData.map(a=>a.val),1);
 
@@ -1662,23 +1711,30 @@ function renderAnalytics() {
       `;
   }
 
-  const daily = stats.daily||{};
-  const sortedDaily = Object.entries(daily).sort((a,b)=> parseDate(b[0]) - parseDate(a[0])).slice(0,15);
-  
-  function parseDate(dateStr) {
-    if(!dateStr) return new Date(0);
-    const parts = dateStr.split('/');
-    if(parts.length !== 3) return new Date(0);
-    return new Date(parts[2], parts[1] - 1, parts[0]);
-  }
-
+  // Visitas diarias: usar servidor si disponible, si no local
+  const serverVisits = serverData ? serverData.visits : [];
   const dailyVisitsTable = document.getElementById('dailyVisitsTable');
   if(dailyVisitsTable){
+    if (serverVisits.length > 0) {
+      // Datos del servidor (formato: {date: 'YYYY-MM-DD', count: N})
+      dailyVisitsTable.innerHTML = `
+        <table style="font-size:12px; min-width: 100%;">
+          <thead><tr><th>Fecha</th><th>Visitas Únicas</th></tr></thead>
+          <tbody>${serverVisits.map(v=>`<tr><td style="color:#aaa;">${new Date(v.date+'T12:00:00').toLocaleDateString('es-DO')}</td><td style="font-weight:600;color:#fff;">${v.count}</td></tr>`).join('')}</tbody>
+        </table>`;
+    } else {
+      // Fallback local
+      const daily = localStats.daily||{};
+      const sortedDaily = Object.entries(daily).sort((a,b)=> {
+        const pa = a[0].split('/'); const pb = b[0].split('/');
+        return new Date(pb[2],pb[1]-1,pb[0]) - new Date(pa[2],pa[1]-1,pa[0]);
+      }).slice(0,15);
       dailyVisitsTable.innerHTML = sortedDaily.length ? `
         <table style="font-size:12px; min-width: 100%;">
           <thead><tr><th>Fecha</th><th>Visitas Únicas</th></tr></thead>
           <tbody>${sortedDaily.map(([date,val])=>`<tr><td style="color:#aaa;">${date}</td><td style="font-weight:600;color:#fff;">${val}</td></tr>`).join('')}</tbody>
         </table>` : '<div class="empty-state"><p>No hay registros.</p></div>';
+    }
   }
 }
 
