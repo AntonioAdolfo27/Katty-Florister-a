@@ -548,17 +548,46 @@ app.get('/api/orders', requireAdmin, async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    let orderData = { ...req.body };
-    if (typeof orderData.items_json === 'string') { try { orderData.items_json = JSON.parse(orderData.items_json); } catch(e) {} }
+    const raw = req.body;
+    // Solo incluir columnas que existen en la tabla orders
+    // Esto evita errores 500 cuando pago.html envía campos extra (customer_note, date, etc.)
+    const allowedCols = [
+      'customer_name','customer_phone','customer_email','customer_address',
+      'items_json','total','status','payment_status','payment_method',
+      'payment_id','tracking_code','estimated_delivery','tracking_steps',
+      'notes','created_at'
+    ];
+    let orderData = {};
+    allowedCols.forEach(col => { if (raw[col] !== undefined) orderData[col] = raw[col]; });
+
+    // Mover customer_note → notes si viene así desde pago.html
+    if (raw.customer_note && !orderData.notes) orderData.notes = raw.customer_note;
+
+    // Eliminar id para que Supabase lo genere (SERIAL)
+    delete orderData.id;
+
+    if (typeof orderData.items_json === 'string') {
+      try { orderData.items_json = JSON.parse(orderData.items_json); } catch(e) {}
+    }
     if (!orderData.created_at)        orderData.created_at        = new Date().toISOString();
     if (!orderData.tracking_code)     orderData.tracking_code     = generateTrackingCode();
     if (!orderData.estimated_delivery)orderData.estimated_delivery= getEstimatedDelivery();
     if (!orderData.tracking_steps)    orderData.tracking_steps    = defaultTrackingSteps(orderData.created_at);
     if (!orderData.payment_status)    orderData.payment_status    = 'pending';
+    if (!orderData.status)            orderData.status            = 'confirmed';
+
+    console.log('Creating order:', orderData.customer_name, orderData.tracking_code);
     const { data, error } = await supabase.from('orders').insert([orderData]).select();
-    if (error) throw error;
+    if (error) {
+      console.error('Order insert error:', error.message);
+      throw error;
+    }
+    console.log('Order created:', data[0]?.id);
     return res.status(201).json({ success: true, order: data[0] });
-  } catch(err) { return res.status(500).json({ error: err.message }); }
+  } catch(err) {
+    console.error('POST /api/orders:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/orders/track/:code', async (req, res) => {
@@ -659,117 +688,6 @@ app.get('/api/payment-config', (req, res) => {
 
 app.get('/api/status', (req, res) => {
   res.json({ status: 'online', version: '7.0', stripe: !!stripe, paypal: !!(process.env.PAYPAL_CLIENT_ID) });
-});
-
-
-// =============================================================
-// ANALYTICS — Visitas, Eventos y Productos más vistos
-// =============================================================
-
-// POST /api/analytics/visit — registrar visita de página
-app.post('/api/analytics/visit', async (req, res) => {
-  try {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const page  = req.body.page || 'index';
-    // Upsert: incrementar contador del día
-    const { data: existing } = await supabase
-      .from('analytics_visits')
-      .select('id, count')
-      .eq('date', today)
-      .single();
-    if (existing) {
-      await supabase.from('analytics_visits')
-        .update({ count: existing.count + 1, updated_at: new Date().toISOString() })
-        .eq('id', existing.id);
-    } else {
-      await supabase.from('analytics_visits')
-        .insert([{ date: today, count: 1 }]);
-    }
-    return res.json({ success: true });
-  } catch(err) {
-    // No bloquear la página si falla analytics
-    return res.json({ success: false });
-  }
-});
-
-// POST /api/analytics/event — registrar evento (carrito, chatbot, etc.)
-app.post('/api/analytics/event', async (req, res) => {
-  try {
-    const { event, data = {} } = req.body;
-    if (!event) return res.json({ success: false });
-    await supabase.from('analytics_events')
-      .insert([{ event, data: JSON.stringify(data), created_at: new Date().toISOString() }]);
-    return res.json({ success: true });
-  } catch(err) {
-    return res.json({ success: false });
-  }
-});
-
-// POST /api/analytics/product-view — registrar vista de producto
-app.post('/api/analytics/product-view', async (req, res) => {
-  try {
-    const { product_id, product_name } = req.body;
-    if (!product_id) return res.json({ success: false });
-    const { data: existing } = await supabase
-      .from('analytics_product_views')
-      .select('id, count')
-      .eq('product_id', String(product_id))
-      .single();
-    if (existing) {
-      await supabase.from('analytics_product_views')
-        .update({ count: existing.count + 1 })
-        .eq('id', existing.id);
-    } else {
-      await supabase.from('analytics_product_views')
-        .insert([{ product_id: String(product_id), product_name: product_name || '', count: 1 }]);
-    }
-    return res.json({ success: true });
-  } catch(err) {
-    return res.json({ success: false });
-  }
-});
-
-// GET /api/analytics/summary — resumen para el admin
-app.get('/api/analytics/summary', requireAdmin, async (req, res) => {
-  try {
-    // Visitas diarias (últimos 30 días)
-    const { data: visits } = await supabase
-      .from('analytics_visits')
-      .select('date, count')
-      .order('date', { ascending: false })
-      .limit(30);
-
-    // Eventos agrupados (conteo por tipo)
-    const { data: events } = await supabase
-      .from('analytics_events')
-      .select('event')
-      .order('created_at', { ascending: false })
-      .limit(1000);
-
-    const eventCounts = {};
-    (events || []).forEach(e => {
-      eventCounts[e.event] = (eventCounts[e.event] || 0) + 1;
-    });
-
-    // Total visitas
-    const totalVisits = (visits || []).reduce((a, v) => a + (v.count || 0), 0);
-
-    // Productos más vistos
-    const { data: topProducts } = await supabase
-      .from('analytics_product_views')
-      .select('product_id, product_name, count')
-      .order('count', { ascending: false })
-      .limit(8);
-
-    return res.json({
-      visits: visits || [],
-      totalVisits,
-      events: eventCounts,
-      topProducts: topProducts || []
-    });
-  } catch(err) {
-    return res.status(500).json({ error: err.message });
-  }
 });
 
 // ── Fallback SPA ────────────────────────────────────────────
