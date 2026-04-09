@@ -672,3 +672,4 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCartItems();
 
 }); /* fin DOMContentLoaded */
+
