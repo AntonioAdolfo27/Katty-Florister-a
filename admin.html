@@ -78,6 +78,7 @@
       .confirm-box { padding: 20px; }
       .confirm-btns button { width: 100%; }
     }
+    
 
     /* ===== FORM MODAL (Responsivo) ===== */
     .modal-overlay {
@@ -954,18 +955,11 @@ function getAnalytics() {
 
 // ===== CARGA ANALYTICS DESDE SUPABASE =====
 let _analyticsCache = null;
-
 async function loadAnalyticsFromServer() {
   try {
-    const res = await fetch(`${API_URL}/api/analytics/summary`, {
-      headers: getAuthHeaders(),
-      signal: AbortSignal.timeout(8000)
-    });
-    if (res.ok) {
-      _analyticsCache = await res.json();
-      return _analyticsCache;
-    }
-  } catch(e) { console.warn('analytics load:', e.message); }
+    const res = await fetch(`${API_URL}/api/analytics/summary`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(8000) });
+    if (res.ok) { _analyticsCache = await res.json(); return _analyticsCache; }
+  } catch(e) {}
   return null;
 }
 
@@ -1046,8 +1040,9 @@ async function syncProductsFromServer(silent = false) {
 // ===== DASHBOARD RENDER =====
 async function renderDashboard() {
   const localStats = getAnalytics();
-  const products = getAllProducts();
-  // Cargar pedidos desde servidor
+  const products   = getAllProducts();
+
+  // Cargar pedidos desde Supabase
   let orders = [];
   try {
     const ro = await fetch(`${API_URL}/api/orders`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(6000) });
@@ -1055,21 +1050,22 @@ async function renderDashboard() {
     else orders = JSON.parse(localStorage.getItem('kf_orders') || '[]');
   } catch(e) { orders = JSON.parse(localStorage.getItem('kf_orders') || '[]'); }
 
-  // Cargar suscriptores desde servidor
+  // Cargar suscriptores desde Supabase
   let subsCount = 0;
   try {
     const rs = await fetch(`${API_URL}/api/subscribers`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(6000) });
-    if (rs.ok) { const subsData = await rs.json(); subsCount = subsData.length; }
+    if (rs.ok) subsCount = (await rs.json()).length;
+    else subsCount = JSON.parse(localStorage.getItem('kf_subscribers') || '[]').length;
   } catch(e) { subsCount = JSON.parse(localStorage.getItem('kf_subscribers') || '[]').length; }
 
-  // Cargar visitas desde servidor
-  let serverVisits = [];
-  let totalServerVisits = 0;
+  // Cargar visitas desde Supabase
+  let serverVisits = [], totalServerVisits = 0;
   try {
     const rv = await fetch(`${API_URL}/api/analytics/summary`, { headers: getAuthHeaders(), signal: AbortSignal.timeout(6000) });
     if (rv.ok) { const vd = await rv.json(); serverVisits = vd.visits || []; totalServerVisits = vd.totalVisits || 0; }
   } catch(e) {}
 
+  const stats      = localStats; // para compatibilidad con código existente
   const totalVisits = totalServerVisits || localStats.visits || 0;
 
   // 1. Stat Cards
@@ -1107,16 +1103,15 @@ async function renderDashboard() {
       `;
   }
 
-  // 2. Visitas Chart — usar datos del servidor si disponibles
+  // 2. Visitas Chart
   const daysShort = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const today = new Date();
   const chartData = Array.from({length:7},(_,i)=>{
     const d = new Date(today); d.setDate(d.getDate()-6+i);
-    const isoDate = d.toISOString().split('T')[0]; // YYYY-MM-DD
+    const isoDate  = d.toISOString().split('T')[0];
     const localKey = d.toLocaleDateString('es-DO');
-    // Buscar en datos del servidor primero
-    const serverEntry = serverVisits.find(v => v.date === isoDate);
-    const val = serverEntry ? serverEntry.count : (localStats.daily?.[localKey] || 0);
+    const srv      = serverVisits.find(v => v.date === isoDate);
+    const val      = srv ? srv.count : (localStats.daily?.[localKey] || 0);
     return { day: daysShort[d.getDay()], val };
   });
   
@@ -1339,21 +1334,34 @@ function openAddProduct() {
 }
 
 function openEditProduct(id) {
-  const p = getAllProducts().find(x=>x.id===id);
-  if (!p) return;
+  id = String(id);
+  // Buscar en todos los productos (localStorage + defaults)
+  const all = getAllProducts();
+  const p = all.find(x => String(x.id) === id);
+  if (!p) {
+    // Si no está en caché, forzar sync y reintentar en 1 segundo
+    showToast('🔄 Cargando datos del producto...', 'info');
+    syncProductsFromServer(true).then(() => {
+      const p2 = getAllProducts().find(x => String(x.id) === id);
+      if (p2) openEditProduct(id);
+      else showToast('❌ Producto no encontrado', 'danger');
+    });
+    return;
+  }
   editingId = id;
-  
+
   const title = document.getElementById('productModalTitle');
   if(title) title.textContent = '✏️ Editar Producto';
-  
-  const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
-  
-  setVal('pName', p.name);
+
+  const setVal = (elId, val) => { const el = document.getElementById(elId); if(el) el.value = (val !== undefined && val !== null) ? val : ''; };
+
+  setVal('pName',  p.name);
   setVal('pPrice', p.price);
-  setVal('pDesc', p.desc);
-  
-  setVal('pFileImg', ''); 
-  setVal('pImgUrlHidden', p.img);
+  // desc puede venir como p.desc o p.description según el origen
+  setVal('pDesc',  p.desc || p.description || '');
+
+  setVal('pFileImg', '');
+  setVal('pImgUrlHidden', p.img || '');
   
   const nameDisplay = document.getElementById('fileNameDisplay');
   if(nameDisplay) nameDisplay.textContent = 'Imagen actual cargada';
@@ -1364,9 +1372,10 @@ function openEditProduct(id) {
       preview.style.display = 'block';
   }
 
-  setVal('pCategory', p._cat);
-  setVal('pBadge', p.badge);
-  setVal('pStatus', p.status);
+  // category puede venir como p.category (de Supabase) o p._cat (de localStorage agrupado)
+  setVal('pCategory', p.category || p._cat || 'tipo');
+  setVal('pBadge',  p.badge  || '');
+  setVal('pStatus', p.status || 'active');
   
   const modal = document.getElementById('productModal');
   if(modal) modal.classList.add('open');
@@ -1612,20 +1621,16 @@ function clearOrders() {
 
 // ===== ANALYTICS =====
 async function renderAnalytics() {
-  // Cargar desde Supabase primero
   const serverData = await loadAnalyticsFromServer();
-  // Combinar con localStorage como respaldo
   const localStats = getAnalytics();
   let orders = [];
   try { orders = JSON.parse(localStorage.getItem('kf_orders') || '[]'); } catch(e){}
-  
   const totalRevenue = orders.reduce((a,o)=>a+(o.total||0),0);
-  const avgOrder = orders.length ? totalRevenue / orders.length : 0;
-  
-  // Usar datos del servidor si están disponibles, si no usar local
-  const totalVisits = serverData ? serverData.totalVisits : (localStats.visits || 0);
-  const eventCounts = serverData ? serverData.events : (localStats.clicks || {});
-  const topProductsServer = serverData ? serverData.topProducts : [];
+  const avgOrder     = orders.length ? totalRevenue / orders.length : 0;
+  const totalVisits  = serverData ? serverData.totalVisits : (localStats.visits || 0);
+  const eventCounts  = serverData ? serverData.events     : (localStats.clicks || {});
+  const topProductsServer = serverData ? (serverData.topProducts || []) : [];
+  const stats = localStats;
 
   const analyticsCards = document.getElementById('analyticsCards');
   if(analyticsCards){
@@ -1654,38 +1659,32 @@ async function renderAnalytics() {
       `;
   }
 
-  // Usar datos del servidor para productos más vistos
-  const finalTopProducts = topProductsServer.length > 0
-    ? topProductsServer
-    : (() => {
-        const prods = localStats.products||{};
-        return Object.entries(prods).sort((a,b)=>b[1]-a[1]).slice(0,8)
-          .map(([id, count]) => ({ product_id: id, product_name: id, count }));
-      })();
-  const maxProd = Math.max(...finalTopProducts.map(p=>p.count||0), 1);
-
+  // Productos más vistos: usar Supabase si hay datos, si no localStorage
+  const finalProds = topProductsServer.length > 0 ? topProductsServer
+    : Object.entries(stats.products||{}).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([id,count])=>({ product_id:id, product_name:id, count }));
+  const maxProd = Math.max(...finalProds.map(p=>p.count||0), 1);
   const productHitsChart = document.getElementById('productHitsChart');
   if(productHitsChart){
-      productHitsChart.innerHTML = finalTopProducts.length ?
-        finalTopProducts.map(p => `
-          <div style="background:rgba(255,255,255,0.01); padding:10px; border-radius:8px; border:1px solid var(--border);">
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px; gap: 10px;">
-              <span style="color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; flex:1;">${p.product_name || p.product_id}</span>
-              <span style="color:var(--primary-light);font-weight:600; flex-shrink:0;">${p.count} <i class="fas fa-eye"></i></span>
-            </div>
-            <div style="width:100%;background:rgba(255,255,255,0.05);height:5px;border-radius:3px;overflow:hidden;">
-              <div style="height:100%;background:var(--primary);width:${((p.count||0)/maxProd)*100}%"></div>
-            </div>
-          </div>`
-        ).join('') : '<div class="empty-state"><p>Sin datos.</p></div>';
+    productHitsChart.innerHTML = finalProds.length ?
+      finalProds.map(p=>`
+        <div style="background:rgba(255,255,255,0.01);padding:10px;border-radius:8px;border:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;gap:10px;">
+            <span style="color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${p.product_name||p.product_id}</span>
+            <span style="color:var(--primary-light);font-weight:600;flex-shrink:0;">${p.count} <i class="fas fa-eye"></i></span>
+          </div>
+          <div style="width:100%;background:rgba(255,255,255,0.05);height:5px;border-radius:3px;overflow:hidden;">
+            <div style="height:100%;background:var(--primary);width:${((p.count||0)/maxProd)*100}%"></div>
+          </div>
+        </div>`).join('')
+      : '<div class="empty-state"><p>Sin datos.</p></div>';
   }
 
   const actionsData = [
-    { label: 'Clic WhatsApp Directo', val: eventCounts['ws_direct'] || 0, icon: 'fab fa-whatsapp', color: '#4caf50' },
-    { label: 'Añadido al Carrito', val: eventCounts['add_to_cart'] || 0, icon: 'fas fa-shopping-cart', color: 'var(--primary-light)' },
-    { label: 'Checkout Iniciado', val: eventCounts['checkout_start'] || 0, icon: 'fas fa-cash-register', color: '#2196f3' },
-    { label: 'Consultas Chatbot', val: eventCounts['chatbot_open'] || 0, icon: 'fas fa-comments', color: '#9c27b0' },
-    { label: 'Suscripción News', val: eventCounts['newsletter_subscribe'] || 0, icon: 'fas fa-envelope', color: '#ff9800' }
+    { label: 'Clic WhatsApp Directo', val: eventCounts['ws_direct']||0, icon: 'fab fa-whatsapp', color: '#4caf50' },
+    { label: 'Añadido al Carrito', val: eventCounts['add_to_cart']||0, icon: 'fas fa-shopping-cart', color: 'var(--primary-light)' },
+    { label: 'Checkout Iniciado', val: eventCounts['checkout_start']||0, icon: 'fas fa-cash-register', color: '#2196f3' },
+    { label: 'Consultas Chatbot', val: eventCounts['chatbot_open']||0, icon: 'fas fa-comments', color: '#9c27b0' },
+    { label: 'Suscripción News', val: eventCounts['newsletter_subscribe']||0, icon: 'fas fa-envelope', color: '#ff9800' }
   ];
   const maxAction = Math.max(...actionsData.map(a=>a.val),1);
 
@@ -1711,28 +1710,22 @@ async function renderAnalytics() {
       `;
   }
 
-  // Visitas diarias: usar servidor si disponible, si no local
-  const serverVisits = serverData ? serverData.visits : [];
+  const serverVisits2 = serverData ? (serverData.visits || []) : [];
   const dailyVisitsTable = document.getElementById('dailyVisitsTable');
   if(dailyVisitsTable){
-    if (serverVisits.length > 0) {
-      // Datos del servidor (formato: {date: 'YYYY-MM-DD', count: N})
+    if(serverVisits2.length > 0){
       dailyVisitsTable.innerHTML = `
-        <table style="font-size:12px; min-width: 100%;">
+        <table style="font-size:12px;min-width:100%;">
           <thead><tr><th>Fecha</th><th>Visitas Únicas</th></tr></thead>
-          <tbody>${serverVisits.map(v=>`<tr><td style="color:#aaa;">${new Date(v.date+'T12:00:00').toLocaleDateString('es-DO')}</td><td style="font-weight:600;color:#fff;">${v.count}</td></tr>`).join('')}</tbody>
+          <tbody>${serverVisits2.map(v=>`<tr><td style="color:#aaa;">${new Date(v.date+'T12:00:00').toLocaleDateString('es-DO')}</td><td style="font-weight:600;color:#fff;">${v.count}</td></tr>`).join('')}</tbody>
         </table>`;
     } else {
-      // Fallback local
       const daily = localStats.daily||{};
-      const sortedDaily = Object.entries(daily).sort((a,b)=> {
-        const pa = a[0].split('/'); const pb = b[0].split('/');
-        return new Date(pb[2],pb[1]-1,pb[0]) - new Date(pa[2],pa[1]-1,pa[0]);
-      }).slice(0,15);
-      dailyVisitsTable.innerHTML = sortedDaily.length ? `
-        <table style="font-size:12px; min-width: 100%;">
+      const sd = Object.entries(daily).sort((a,b)=>{const pa=a[0].split('/'),pb=b[0].split('/');return new Date(pb[2],pb[1]-1,pb[0])-new Date(pa[2],pa[1]-1,pa[0]);}).slice(0,15);
+      dailyVisitsTable.innerHTML = sd.length ? `
+        <table style="font-size:12px;min-width:100%;">
           <thead><tr><th>Fecha</th><th>Visitas Únicas</th></tr></thead>
-          <tbody>${sortedDaily.map(([date,val])=>`<tr><td style="color:#aaa;">${date}</td><td style="font-weight:600;color:#fff;">${val}</td></tr>`).join('')}</tbody>
+          <tbody>${sd.map(([date,val])=>`<tr><td style="color:#aaa;">${date}</td><td style="font-weight:600;color:#fff;">${val}</td></tr>`).join('')}</tbody>
         </table>` : '<div class="empty-state"><p>No hay registros.</p></div>';
     }
   }
