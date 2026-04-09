@@ -4,6 +4,8 @@
 // y envío de email masivo a suscriptores.
 // =============================================================
 
+
+
 require('dotenv').config();
 const express   = require('express');
 const cors      = require('cors');
@@ -35,6 +37,20 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
 }
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 console.log('✅  Supabase conectado.');
+// Service key para uploads (bypass RLS en Storage)
+const supabaseAdmin = process.env.SUPABASE_SERVICE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : supabase;
+if (process.env.SUPABASE_SERVICE_KEY) console.log('✅  Supabase Admin listo para Storage.');
+else console.warn('⚠️  SUPABASE_SERVICE_KEY no definida — uploads pueden fallar.');
+
+// Cliente admin con SERVICE ROLE KEY para uploads de imágenes (bypass RLS)
+  : supabase;
+if (process.env.SUPABASE_SERVICE_KEY) {
+  console.log('✅  Supabase Admin listo para Storage.');
+} else {
+  console.warn('⚠️   SUPABASE_SERVICE_KEY no definida — uploads pueden fallar.');
+}
 
 // ── Nodemailer (email) ───────────────────────────────────────
 let mailTransporter = null;
@@ -417,47 +433,83 @@ app.post('/api/promotions/:id/send-email', requireAdmin, async (req, res) => {
 
 // ── Plantilla HTML del email de promoción ──────────────────
 function buildPromoEmail(storeName, promo, greeting) {
+  const year = new Date().getFullYear();
+  const wa   = process.env.WA_NUMBER || '18294317622';
   return `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${promo.title} — ${storeName}</title>
 <style>
-  body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f5f5;margin:0;padding:0;}
-  .container{max-width:560px;margin:30px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);}
-  .header{background:linear-gradient(135deg,#c2185b,#ff4081);padding:36px;text-align:center;color:#fff;}
-  .header h1{margin:0;font-size:26px;font-weight:700;}
-  .header p{margin:8px 0 0;opacity:.85;font-size:14px;}
-  .body{padding:36px;}
-  .body p{color:#444;line-height:1.7;margin:0 0 16px;}
-  .code-box{background:#fff0f5;border:2px dashed #ff4081;border-radius:12px;padding:24px;text-align:center;margin:24px 0;}
-  .code-box .code{font-size:32px;font-weight:800;letter-spacing:6px;color:#c2185b;}
-  .code-box p{color:#888;font-size:13px;margin:8px 0 0;}
-  .discount-badge{display:inline-block;background:linear-gradient(135deg,#c2185b,#ff4081);color:#fff;padding:8px 24px;border-radius:30px;font-weight:700;font-size:18px;margin-bottom:8px;}
-  .cta{display:block;margin:24px auto 0;background:linear-gradient(135deg,#c2185b,#ff4081);color:#fff !important;padding:16px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;text-align:center;width:fit-content;}
-  .footer{background:#f9f9f9;padding:20px 36px;text-align:center;font-size:12px;color:#aaa;border-top:1px solid #eee;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f0f0;padding:20px 0;}
+  .wrap{max-width:580px;margin:0 auto;}
+  .header{background:linear-gradient(135deg,#c2185b 0%,#ff4081 100%);padding:40px 36px 32px;text-align:center;border-radius:16px 16px 0 0;}
+  .logo{font-size:36px;margin-bottom:8px;}
+  .header h1{color:#fff;font-size:24px;font-weight:700;letter-spacing:.5px;}
+  .header p{color:rgba(255,255,255,.85);font-size:14px;margin-top:6px;}
+  .body{background:#fff;padding:36px;}
+  .greeting{font-size:16px;color:#333;margin-bottom:16px;}
+  .intro{font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;}
+  .offer-card{background:linear-gradient(135deg,#fff0f5,#fff8fb);border:2px solid #ffb3c6;border-radius:14px;padding:28px;text-align:center;margin:0 0 24px;}
+  .discount-pill{display:inline-block;background:linear-gradient(135deg,#c2185b,#ff4081);color:#fff;padding:10px 28px;border-radius:50px;font-size:20px;font-weight:800;margin-bottom:16px;letter-spacing:.5px;}
+  .offer-title{font-size:16px;color:#333;font-weight:600;margin-bottom:8px;}
+  .offer-desc{font-size:13px;color:#777;margin-bottom:20px;line-height:1.5;}
+  .code-label{font-size:12px;color:#999;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+  .code-box{background:#fff;border:2.5px dashed #c2185b;border-radius:10px;padding:14px 24px;display:inline-block;}
+  .code{font-size:28px;font-weight:800;letter-spacing:8px;color:#c2185b;font-family:monospace;}
+  .cta-section{text-align:center;margin:24px 0 8px;}
+  .cta{display:inline-block;background:linear-gradient(135deg,#c2185b,#ff4081);color:#fff;padding:16px 40px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.3px;}
+  .cta:hover{opacity:.9;}
+  .steps{background:#f9f9f9;border-radius:10px;padding:20px 24px;margin:24px 0;}
+  .steps h4{font-size:13px;color:#888;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;}
+  .step{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
+  .step-num{background:#c2185b;color:#fff;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .step p{font-size:13px;color:#555;line-height:1.5;}
+  .disclaimer{font-size:11px;color:#bbb;text-align:center;margin-top:12px;}
+  .footer{background:#1a1a1a;padding:24px 36px;text-align:center;border-radius:0 0 16px 16px;}
+  .footer p{color:#888;font-size:12px;line-height:1.8;}
+  .footer a{color:#ff4081;text-decoration:none;}
+  @media(max-width:600px){.header,.body,.steps{padding:24px 20px;}.code{font-size:22px;letter-spacing:4px;}.cta{padding:14px 28px;}}
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
   <div class="header">
-    <h1>🌸 ${storeName}</h1>
-    <p>¡Tenemos una oferta especial para ti!</p>
+    <div class="logo">🌸</div>
+    <h1>${storeName}</h1>
+    <p>Tenemos una oferta exclusiva reservada para ti</p>
   </div>
   <div class="body">
-    <p>${greeting},</p>
-    <p>Queremos premiarte con esta promoción exclusiva. No dejes pasar esta oportunidad.</p>
-    <div class="code-box">
-      <div class="discount-badge">${promo.discount}</div>
-      <p>Usa el código:</p>
-      <div class="code">${promo.code}</div>
-      <p>${promo.description || promo.title}</p>
+    <p class="greeting">${greeting},</p>
+    <p class="intro">Como parte de nuestra comunidad especial, queremos compartir contigo esta promoción exclusiva. ¡Es nuestra forma de agradecerte tu preferencia!</p>
+
+    <div class="offer-card">
+      <div class="discount-pill">${promo.discount}</div>
+      <p class="offer-title">${promo.title}</p>
+      <p class="offer-desc">${promo.description || 'Oferta especial por tiempo limitado para nuestros clientes más especiales.'}</p>
+      <p class="code-label">Tu código de descuento</p>
+      <div class="code-box"><span class="code">${promo.code}</span></div>
     </div>
-    <p style="color:#888;font-size:13px;">Aplica al hacer tu pedido. Consulta términos y condiciones con nosotros.</p>
-    <a class="cta" href="https://wa.me/${process.env.WA_NUMBER || '18294317622'}?text=Hola!%20Quiero%20usar%20el%20código%20${promo.code}">
-      📲 Hacer mi pedido por WhatsApp
-    </a>
+
+    <div class="cta-section">
+      <a class="cta" href="https://wa.me/${wa}?text=Hola%20${encodeURIComponent(storeName)}!%20Quiero%20usar%20mi%20código%20de%20descuento%3A%20${promo.code}">
+        📲 Usar mi descuento por WhatsApp
+      </a>
+    </div>
+
+    <div class="steps">
+      <h4>¿Cómo usar tu código?</h4>
+      <div class="step"><div class="step-num">1</div><p>Elige tu arreglo floral favorito de nuestro catálogo</p></div>
+      <div class="step"><div class="step-num">2</div><p>Escríbenos por WhatsApp mencionando el código <strong>${promo.code}</strong></p></div>
+      <div class="step"><div class="step-num">3</div><p>¡Listo! Aplica el descuento y recibe tu arreglo a domicilio</p></div>
+    </div>
+
+    <p class="disclaimer">* Promoción válida por tiempo limitado. Aplica términos y condiciones. No acumulable con otras ofertas.</p>
   </div>
   <div class="footer">
-    <p>Recibes este correo porque te suscribiste a ${storeName}.</p>
-    <p>© ${new Date().getFullYear()} ${storeName}. Santo Domingo, RD.</p>
+    <p>🌸 <strong style="color:#ff4081">${storeName}</strong></p>
+    <p>Recibes este correo porque te suscribiste a nuestro newsletter.</p>
+    <p style="margin-top:8px;"><a href="https://wa.me/${wa}">WhatsApp</a> · Santo Domingo, RD</p>
+    <p style="margin-top:8px;color:#555;">© ${year} ${storeName}. Todos los derechos reservados.</p>
   </div>
 </div>
 </body></html>`;
@@ -548,46 +600,20 @@ app.get('/api/orders', requireAdmin, async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const raw = req.body;
-    // Solo incluir columnas que existen en la tabla orders
-    // Esto evita errores 500 cuando pago.html envía campos extra (customer_note, date, etc.)
-    const allowedCols = [
-      'customer_name','customer_phone','customer_email','customer_address',
-      'items_json','total','status','payment_status','payment_method',
-      'payment_id','tracking_code','estimated_delivery','tracking_steps',
-      'notes','created_at'
-    ];
-    let orderData = {};
-    allowedCols.forEach(col => { if (raw[col] !== undefined) orderData[col] = raw[col]; });
-
-    // Mover customer_note → notes si viene así desde pago.html
-    if (raw.customer_note && !orderData.notes) orderData.notes = raw.customer_note;
-
-    // Eliminar id para que Supabase lo genere (SERIAL)
+    let orderData = { ...req.body };
+    // Eliminar id para que Supabase lo genere automáticamente (SERIAL)
     delete orderData.id;
-
-    if (typeof orderData.items_json === 'string') {
-      try { orderData.items_json = JSON.parse(orderData.items_json); } catch(e) {}
-    }
+    if (typeof orderData.items_json === 'string') { try { orderData.items_json = JSON.parse(orderData.items_json); } catch(e) {} }
     if (!orderData.created_at)        orderData.created_at        = new Date().toISOString();
     if (!orderData.tracking_code)     orderData.tracking_code     = generateTrackingCode();
     if (!orderData.estimated_delivery)orderData.estimated_delivery= getEstimatedDelivery();
     if (!orderData.tracking_steps)    orderData.tracking_steps    = defaultTrackingSteps(orderData.created_at);
     if (!orderData.payment_status)    orderData.payment_status    = 'pending';
-    if (!orderData.status)            orderData.status            = 'confirmed';
-
-    console.log('Creating order:', orderData.customer_name, orderData.tracking_code);
+    if (!orderData.status)            orderData.status            = 'pending';
     const { data, error } = await supabase.from('orders').insert([orderData]).select();
-    if (error) {
-      console.error('Order insert error:', error.message);
-      throw error;
-    }
-    console.log('Order created:', data[0]?.id);
+    if (error) throw error;
     return res.status(201).json({ success: true, order: data[0] });
-  } catch(err) {
-    console.error('POST /api/orders:', err.message);
-    return res.status(500).json({ error: err.message });
-  }
+  } catch(err) { return res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/orders/track/:code', async (req, res) => {
@@ -668,9 +694,9 @@ app.post('/api/upload', requireAdmin, async (req, res) => {
     const raw      = base64.includes(';base64,') ? base64.split(';base64,').pop() : base64;
     const buffer   = Buffer.from(raw, 'base64');
     const filePath = `${Date.now()}-${name.replace(/[^a-z0-9._-]/gi,'_').toLowerCase()}`;
-    const { error } = await supabase.storage.from(BUCKET).upload(filePath, buffer, { contentType: type, upsert: false });
+    const { error } = await supabaseAdmin.storage.from(BUCKET).upload(filePath, buffer, { contentType: type, upsert: true });
     if (error) throw new Error(error.message);
-    const { data } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+    const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filePath);
     return res.json({ success: true, publicUrl: data.publicUrl });
   } catch(err) { return res.status(500).json({ error: err.message }); }
 });
@@ -688,6 +714,59 @@ app.get('/api/payment-config', (req, res) => {
 
 app.get('/api/status', (req, res) => {
   res.json({ status: 'online', version: '7.0', stripe: !!stripe, paypal: !!(process.env.PAYPAL_CLIENT_ID) });
+});
+
+
+// =============================================================
+// ANALYTICS — Visitas, Eventos y Productos más vistos en Supabase
+// =============================================================
+
+app.post('/api/analytics/visit', async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existing } = await supabase.from('analytics_visits').select('id,count').eq('date', today).single().catch(() => ({ data: null }));
+    if (existing) {
+      await supabase.from('analytics_visits').update({ count: existing.count + 1, updated_at: new Date().toISOString() }).eq('id', existing.id);
+    } else {
+      await supabase.from('analytics_visits').insert([{ date: today, count: 1 }]);
+    }
+    return res.json({ success: true });
+  } catch(err) { return res.json({ success: false }); }
+});
+
+app.post('/api/analytics/event', async (req, res) => {
+  try {
+    const { event, data = {} } = req.body;
+    if (!event) return res.json({ success: false });
+    await supabase.from('analytics_events').insert([{ event, data: JSON.stringify(data), created_at: new Date().toISOString() }]);
+    return res.json({ success: true });
+  } catch(err) { return res.json({ success: false }); }
+});
+
+app.post('/api/analytics/product-view', async (req, res) => {
+  try {
+    const { product_id, product_name } = req.body;
+    if (!product_id) return res.json({ success: false });
+    const { data: existing } = await supabase.from('analytics_product_views').select('id,count').eq('product_id', String(product_id)).single().catch(() => ({ data: null }));
+    if (existing) {
+      await supabase.from('analytics_product_views').update({ count: existing.count + 1 }).eq('id', existing.id);
+    } else {
+      await supabase.from('analytics_product_views').insert([{ product_id: String(product_id), product_name: product_name || '', count: 1 }]);
+    }
+    return res.json({ success: true });
+  } catch(err) { return res.json({ success: false }); }
+});
+
+app.get('/api/analytics/summary', requireAdmin, async (req, res) => {
+  try {
+    const { data: visits } = await supabase.from('analytics_visits').select('date,count').order('date', { ascending: false }).limit(30);
+    const { data: events } = await supabase.from('analytics_events').select('event').limit(2000);
+    const eventCounts = {};
+    (events || []).forEach(e => { eventCounts[e.event] = (eventCounts[e.event] || 0) + 1; });
+    const totalVisits = (visits || []).reduce((a, v) => a + (v.count || 0), 0);
+    const { data: topProducts } = await supabase.from('analytics_product_views').select('product_id,product_name,count').order('count', { ascending: false }).limit(8);
+    return res.json({ visits: visits || [], totalVisits, events: eventCounts, topProducts: topProducts || [] });
+  } catch(err) { return res.status(500).json({ error: err.message }); }
 });
 
 // ── Fallback SPA ────────────────────────────────────────────
