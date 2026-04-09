@@ -5,7 +5,6 @@
    ============================================================= */
 
 document.addEventListener('DOMContentLoaded', () => {
-
   /* ─── API URL desde config.js ─────────────────────────────── */
   const API = (typeof KF_CONFIG !== 'undefined') ? KF_CONFIG.API_URL : '';
   const WA  = (typeof KF_CONFIG !== 'undefined') ? KF_CONFIG.WA_NUMBER : '18294317622';
