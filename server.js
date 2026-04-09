@@ -45,7 +45,7 @@ if (process.env.SUPABASE_SERVICE_KEY) console.log('✅  Supabase Admin listo par
 else console.warn('⚠️  SUPABASE_SERVICE_KEY no definida — uploads pueden fallar.');
 
 // Cliente admin con SERVICE ROLE KEY para uploads de imágenes (bypass RLS)
-   supabase;
+  : supabase;
 if (process.env.SUPABASE_SERVICE_KEY) {
   console.log('✅  Supabase Admin listo para Storage.');
 } else {
